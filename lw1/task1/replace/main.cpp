@@ -2,26 +2,30 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <optional>
 
-constexpr int PROGRAM_POS = 0;
-constexpr int INPUT_FILE_POS = 1;
-constexpr int OUTPUT_FILE_POS = 2;
-constexpr int SEARCH_STR_POS = 3;
-constexpr int REPLACE_STR_POS = 4;
-constexpr int INFO_STR_POS = INPUT_FILE_POS;
+struct Args
+{
+	std::string inputPath;
+	std::string outputPath;
+	std::string searchStr;
+	std::string replaceStr;
+};
 
-constexpr int STDIN_MODE_COUNT = 1;
-constexpr int INFO_MODE_COUNT = 2;
-constexpr int COMMAND_LINE_MODE_COUNT = 5;
+void PrintHelp()
+{
+	std::cout << "Использование:" << "\n";
+	std::cout << "  WIN OS: replace.exe <input file> <output file> <search string> <replace string>" << "\n";
+	std::cout << "  MacOS/Linux OS: ./replace <input file> <output file> <search string> <replace string>" << "\n";
+	std::cout << "РЕЖИМ \"STDIN\" WIN OS: replace.exe" << "\n";
+	std::cout << "РЕЖИМ \"STDIN\" MacOS/Linux OS: ./replace" << "\n";
+	std::cout << "  replace.exe -h (показать информацию по использованию)" << "\n";
+}
 
-constexpr auto* HELP_FLAG = "-h";
-constexpr auto* ERROR_MESSAGE = "ERROR";
-constexpr auto* USAGE_HEADING_STR = "Использование:";
-constexpr auto* USAGE_COMMAND_LINE_MODE_MSG_WIN = "  WIN OS: replace.exe <input file> <output file> <search string> <replace string>";
-constexpr auto* USAGE_COMMAND_LINE_MODE_MSG_UNIX = "  MacOS/Linux OS: ./replace <input file> <output file> <search string> <replace string>";
-constexpr auto* USAGE_STDIN_MODE_MSG_WIN = "РЕЖИМ \"STDIN\" WIN OS: replace.exe";
-constexpr auto* USAGE_STDIN_MODE_MSG_UNIX = "РЕЖИМ \"STDIN\" MacOS/Linux OS: ./replace";
-constexpr auto* USAGE_INFO_MODE_STR = "  replace.exe -h (показать информацию по использованию)";
+void PrintError()
+{
+	std::cout << "ERROR" << "\n";
+}
 
 std::string ReplaceAll(const std::string& str, const std::string& strFrom, const std::string& strTo)
 {
@@ -44,80 +48,96 @@ std::string ReplaceAll(const std::string& str, const std::string& strFrom, const
 	return resultStr;
 }
 
-void PrintHelp()
+std::optional<Args> ParseArgs(const int argCount, char* argValues[])
 {
-	std::cout << USAGE_HEADING_STR << "\n";
-	std::cout << USAGE_COMMAND_LINE_MODE_MSG_WIN << "\n";
-	std::cout << USAGE_COMMAND_LINE_MODE_MSG_UNIX << "\n";
-	std::cout << USAGE_STDIN_MODE_MSG_WIN << "\n";
-	std::cout << USAGE_STDIN_MODE_MSG_UNIX << "\n";
-	std::cout << USAGE_INFO_MODE_STR << "\n";
+	if (argCount != 5)
+	{
+		return std::nullopt;
+	}
+
+	Args args;
+	args.inputPath = argValues[1];
+	args.outputPath = argValues[2];
+	args.searchStr = argValues[3];
+	args.replaceStr = argValues[4];
+
+	if (args.inputPath.empty() || args.outputPath.empty())
+	{
+		return std::nullopt;
+	}
+
+	return args;
+}
+
+bool OpenFiles(const std::string& inputPath, const std::string& outputPath, std::ifstream& input, std::ofstream& output)
+{
+	input.open(inputPath);
+	if (!input.is_open())
+	{
+		return false;
+	}
+
+	output.open(outputPath);
+	if (!output.is_open())
+	{
+		input.close();
+		return false;
+	}
+
+	return true;
+}
+
+void ProcessStream(std::istream& inpF, std::ostream& outF, const std::string& searchStr, const std::string& replaceStr)
+{
+	std::string line;
+	while (std::getline(inpF, line))
+	{
+		outF << ReplaceAll(line, searchStr, replaceStr) << "\n";
+	}
 }
 
 int main(int argCount, char* argValues[])
 {
-	if (argCount == INFO_MODE_COUNT && std::string(argValues[INFO_STR_POS]) == HELP_FLAG)
+	if (argCount == 2 && std::string(argValues[1]) == "-h")
 	{
 		PrintHelp();
 		return 0;
 	}
 
-	if (argCount == COMMAND_LINE_MODE_COUNT)
+	if (auto args = ParseArgs(argCount, argValues))
 	{
-		// Command line mode
-		std::ifstream inputFile(argValues[INPUT_FILE_POS]);
-		if (!inputFile.is_open())
+		std::ifstream inputFile;
+		std::ofstream outputFile;
+		if (!OpenFiles(args->inputPath, args->outputPath, inputFile, outputFile))
 		{
-			std::cout << ERROR_MESSAGE << "\n";
+			PrintError();
 			return 1;
 		}
 
-		std::ofstream outputFile(argValues[OUTPUT_FILE_POS]);
-		if (!outputFile.is_open())
-		{
-			std::cout << ERROR_MESSAGE << "\n";
-			return 1;
-		}
-
-		std::string searchStr = argValues[SEARCH_STR_POS];
-		std::string replaceStr = argValues[REPLACE_STR_POS];
-
-		std::string line;
-		while (std::getline(inputFile, line))
-		{
-			outputFile << ReplaceAll(line, searchStr, replaceStr) << "\n";
-		}
+		ProcessStream(inputFile, outputFile, args->searchStr, args->replaceStr);
 
 		inputFile.close();
 		outputFile.close();
 		return 0;
 	}
 
-	if (argCount == STDIN_MODE_COUNT)
+	if (argCount == 1)
 	{
-		// Stdin mode
 		std::string searchStr;
 		if (!std::getline(std::cin, searchStr))
 		{
-			std::cout << ERROR_MESSAGE << "\n";
-			return 0;
+			return 1;
 		}
-
 		std::string replaceStr;
 		if (!std::getline(std::cin, replaceStr))
 		{
-			std::cout << ERROR_MESSAGE << "\n";
-			return 0;
+			return 1;
 		}
 
-		std::string line;
-		while (std::getline(std::cin, line))
-		{
-			std::cout << ReplaceAll(line, searchStr, replaceStr) << "\n";
-		}
+		ProcessStream(std::cin, std::cout, searchStr, replaceStr);
 		return 0;
 	}
 
-	std::cout << ERROR_MESSAGE << "\n";
+	PrintError();
 	return 1;
 }
