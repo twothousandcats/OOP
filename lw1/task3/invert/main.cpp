@@ -3,169 +3,218 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
-#include <cmath>
+#include <array>
 
-constexpr int MATRIX_CAPACITY = 3;
+constexpr size_t MATRIX_DIMENSION = 3;
 
-constexpr auto* USAGE_INFO_EXE_SAMPLE_WIN = "   WINDOWS OS: invert.exe";
-constexpr auto* USAGE_INFO_EXE_SAMPLE_UNIX = "   MacOS/Linux: ./invert:";
-constexpr auto* USAGE_INFO_HEADING = "Использование:";
-constexpr auto* USAGE_INFO_HELP = " -h";
-constexpr auto* USAGE_INFO_STDIN = " далее программа ожидает коэффициенты матрицы";
-constexpr auto* USAGE_INFO_FILE = " <file_name.txt>";
+using Matrix3x3 = std::array<std::array<double, MATRIX_DIMENSION>, MATRIX_DIMENSION>;
 
-constexpr auto* OPENING_ERROR = "Ошибка открытия файла: ";
-constexpr auto* INVALID_M_FORMAT = "Invalid matrix format";
-constexpr auto* NON_INVERTIBLE = "Non-invertible";
-
-bool ReadMatrix(std::istream& in, double mat[MATRIX_CAPACITY][MATRIX_CAPACITY])
+struct Args
 {
-	std::string line;
-	for (int i = 0; i < MATRIX_CAPACITY; ++i)
+	std::string inputFile;
+	bool showHelp = false;
+};
+
+void PrintHelp()
+{
+	std::cout << "Usage:\n";
+	std::cout << "	WinOS:\n";
+	std::cout << "	  invert.exe               # Read matrix from stdin\n";
+	std::cout << "	  invert.exe <filename>    # Read matrix from file\n";
+	std::cout << "	  invert.exe -h            # Show this help\n";
+	std::cout << "	MacOS/Linux:\n";
+	std::cout << "	  ./invert               # Read matrix from stdin\n";
+	std::cout << "	  ./invert <filename>    # Read matrix from file\n";
+	std::cout << "	  ./invert -h            # Show this help\n";
+}
+
+bool ParseArgs(const int argc, char* argv[], Args& args)
+{
+	if (argc == 2 && std::string(argv[1]) == "-h")
 	{
-		if (!getline(in, line))
+		args.showHelp = true;
+		return true;
+	}
+
+	if (argc == 1)
+	{
+		args.inputFile.clear();
+		return true;
+	}
+
+	if (argc == 2)
+	{
+		args.inputFile = argv[1];
+		return true;
+	}
+
+	return false;
+}
+
+bool ReadMatrix(std::istream& input, Matrix3x3& matrix)
+{
+	for (size_t i = 0; i < MATRIX_DIMENSION; ++i)
+	{
+		std::string line;
+		if (!std::getline(input, line))
+		{
 			return false;
-		std::stringstream ss(line);
-		for (int j = 0; j < MATRIX_CAPACITY; ++j)
+		}
+
+		std::istringstream strStream(line);
+		for (size_t j = 0; j < MATRIX_DIMENSION; ++j)
 		{
-			std::string token;
-			if (!getline(ss, token, '\t'))
-				return false;
-			try
-			{
-				mat[i][j] = std::stod(token);
-			}
-			catch (...)
+			if (!(strStream >> matrix[i][j]))
 			{
 				return false;
 			}
 		}
-	}
-	return true;
-}
 
-double GetDeterminant(double mat[MATRIX_CAPACITY][MATRIX_CAPACITY])
-{
-	return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
-		- mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0])
-		+ mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
-}
-
-void Cofactor(double mat[MATRIX_CAPACITY][MATRIX_CAPACITY], double inv[MATRIX_CAPACITY][MATRIX_CAPACITY])
-{
-	for (int i = 0; i < MATRIX_CAPACITY; ++i)
-	{
-		for (int j = 0; j < MATRIX_CAPACITY; ++j)
+		// no extra values on the line
+		if (std::string remaining; strStream >> remaining)
 		{
-			const int sign = ((i + j) % 2 == 0) ? 1 : -1;
-			const int i1 = (i + 1) % MATRIX_CAPACITY;
-			const int i2 = (i + 2) % MATRIX_CAPACITY;
-			const int j1 = (j + 1) % MATRIX_CAPACITY;
-			const int j2 = (j + 2) % MATRIX_CAPACITY;
-
-			double detMinor = mat[i1][j1] * mat[i2][j2] - mat[i1][j2] * mat[i2][j1];
-			inv[j][i] = sign * detMinor; // Transpose
+			return false;
 		}
 	}
-}
 
-bool Inverse(double mat[MATRIX_CAPACITY][MATRIX_CAPACITY], double inv[MATRIX_CAPACITY][MATRIX_CAPACITY])
-{
-	const double determinant = GetDeterminant(mat);
-	if (abs(determinant) < 1e-9)
+	// no extra lines
+	if (std::string extraLine; std::getline(input, extraLine))
 	{
-		return false;
-	}
-
-	Cofactor(mat, inv);
-	for (int i = 0; i < MATRIX_CAPACITY; ++i)
-	{
-		for (int j = 0; j < MATRIX_CAPACITY; ++j)
+		std::istringstream extraStrStream(extraLine);
+		if (std::string extra; extraStrStream >> extra)
 		{
-			inv[i][j] /= determinant;
+			return false;
 		}
 	}
 
 	return true;
 }
 
-void PrintMatrix(double mat[MATRIX_CAPACITY][MATRIX_CAPACITY])
+double CalculateDeterminant(const Matrix3x3& matrix)
+{
+	return matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1])
+		- matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0])
+		+ matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]);
+}
+
+double GetMinor(const Matrix3x3& matrix, const size_t excludeRow, const size_t excludeCol)
+{
+	size_t rows[MATRIX_DIMENSION - 1], cols[MATRIX_DIMENSION - 1];
+	size_t rowIndex = 0, colIndex = 0;
+	for (size_t i = 0; i < MATRIX_DIMENSION; i++)
+	{
+		if (i != excludeRow)
+		{
+			rows[rowIndex++] = i;
+		}
+		if (i != excludeCol)
+		{
+			cols[colIndex++] = i;
+		}
+	}
+
+	return matrix[rows[0]][cols[0]] * matrix[rows[1]][cols[1]] -
+		matrix[rows[0]][cols[1]] * matrix[rows[1]][cols[0]];
+}
+
+// Algebraic complement
+double GetCofactor(const Matrix3x3& matrix, const size_t row, const size_t col)
+{
+	const double minor = GetMinor(matrix, row, col);
+	// Знак зависит от четности суммы индексов
+	// The sign depends on the parity of the sum of the indices: (-1)^(i+j)
+	return (row + col) % 2 == 0
+		? minor
+		: -minor;
+}
+
+Matrix3x3 CalculateInverse(const Matrix3x3& matrix)
+{
+	Matrix3x3 cofactorMatrix;
+	// Вычисляем матрицу алгебраических дополнений
+	// Calculate algebraic complement matrix
+	for (size_t i = 0; i < MATRIX_DIMENSION; ++i)
+	{
+		for (size_t j = 0; j < MATRIX_DIMENSION; ++j)
+		{
+			cofactorMatrix[i][j] = GetCofactor(matrix, i, j);
+		}
+	}
+
+	// Транспонируем матрицу алгебраических дополнений (присоединенная матрица)
+	// и делим на определитель
+	Matrix3x3 inverse;
+	const double determinant = CalculateDeterminant(matrix);
+	for (size_t i = 0; i < MATRIX_DIMENSION; ++i)
+	{
+		for (size_t j = 0; j < MATRIX_DIMENSION; ++j)
+		{
+			inverse[i][j] = cofactorMatrix[j][i] / determinant; // [j][i] для транспонирования
+		}
+	}
+
+	return inverse;
+}
+
+void PrintInvertedMatrix(const Matrix3x3& matrix)
 {
 	std::cout << std::fixed << std::setprecision(3);
-	for (int i = 0; i < MATRIX_CAPACITY; ++i)
+	for (size_t i = 0; i < MATRIX_DIMENSION; ++i)
 	{
-		for (int j = 0; j < MATRIX_CAPACITY; ++j)
+		for (size_t j = 0; j < MATRIX_DIMENSION; ++j)
 		{
-			std::cout << mat[i][j];
-			if (j != MATRIX_CAPACITY - 1)
+			if (j > 0)
+			{
 				std::cout << "\t";
+			}
+			std::cout << matrix[i][j];
 		}
-
-		std::cout << std::endl;
+		std::cout << "\n";
 	}
 }
 
-int main(const int argCount, char* argValue[])
+int main(int argc, char* argv[])
 {
-	if (argCount > 1)
+	Args args;
+	if (!ParseArgs(argc, argv, args))
 	{
-		const std::string argument = argValue[1];
+		std::cout << "Invalid arguments. Use -h for help.\n";
+		return 1;
+	}
 
-		if (argument == "-h")
+	if (args.showHelp)
+	{
+		PrintHelp();
+		return 0;
+	}
+
+	std::ifstream fileStream;
+	std::istream* input = &std::cin; // unify data reading, by istream pointer
+	if (!args.inputFile.empty())
+	{
+		fileStream.open(args.inputFile);
+		if (!fileStream.is_open())
 		{
-			std::cout << USAGE_INFO_HEADING << std::endl;
-			std::cout << USAGE_INFO_EXE_SAMPLE_WIN << USAGE_INFO_HELP << std::endl;
-			std::cout << USAGE_INFO_EXE_SAMPLE_UNIX << USAGE_INFO_HELP << std::endl;
-			std::cout << USAGE_INFO_EXE_SAMPLE_WIN << USAGE_INFO_STDIN << std::endl;
-			std::cout << USAGE_INFO_EXE_SAMPLE_UNIX << USAGE_INFO_STDIN << std::endl;
-			std::cout << USAGE_INFO_EXE_SAMPLE_WIN << USAGE_INFO_FILE << std::endl;
-			std::cout << USAGE_INFO_EXE_SAMPLE_UNIX << USAGE_INFO_FILE << std::endl;
-
-			return 0;
-		}
-
-		std::ifstream file(argument);
-		if (!file.is_open())
-		{
-			std::cerr << OPENING_ERROR << argument << std::endl;
+			std::cout << "Invalid matrix\n";
 			return 1;
 		}
-
-		double mat[MATRIX_CAPACITY][MATRIX_CAPACITY];
-		if (!ReadMatrix(file, mat))
-		{
-			std::cout << INVALID_M_FORMAT << std::endl;
-			return 0;
-		}
-		file.close();
-
-		double inv[MATRIX_CAPACITY][MATRIX_CAPACITY];
-		if (!Inverse(mat, inv))
-		{
-			std::cout << NON_INVERTIBLE << std::endl;
-			return 0;
-		}
-
-		PrintMatrix(inv);
+		input = &fileStream;
 	}
-	else
+
+	Matrix3x3 matrix;
+	if (!ReadMatrix(*input, matrix))
 	{
-		double mat[MATRIX_CAPACITY][MATRIX_CAPACITY];
-		if (!ReadMatrix(std::cin, mat))
-		{
-			std::cout << INVALID_M_FORMAT << std::endl;
-			return 0;
-		}
-
-		double inv[MATRIX_CAPACITY][MATRIX_CAPACITY];
-		if (!Inverse(mat, inv))
-		{
-			std::cout << NON_INVERTIBLE << std::endl;
-			return 0;
-		}
-
-		PrintMatrix(inv);
+		std::cout << "Invalid matrix format\n";
+		return 1;
 	}
+
+	if (const double determinant = CalculateDeterminant(matrix); determinant == 0.0)
+	{
+		std::cout << "Non-invertible\n";
+		return 0;
+	}
+
+	PrintInvertedMatrix(CalculateInverse(matrix));
 
 	return 0;
 }
