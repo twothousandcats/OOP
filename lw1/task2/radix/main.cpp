@@ -1,65 +1,66 @@
-#include <algorithm>
-#include <cctype>
-#include <climits>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <optional>
+#include <climits>
+#include <cctype>
 
-constexpr int DEFAULT_ARGUMENTS_COUNT = 4;
-constexpr int SOURCE_NOTATION_TYPE_INDEX = 1;
-constexpr int DESTINATION_NOTATION_TYPE_INDEX = 2;
-constexpr int VALUE_INDEX = 3;
+constexpr int MIN_RADIX = 2;
+constexpr int MAX_RADIX = 36;
 
-constexpr int MIN_NOTATION = 2;
-constexpr int MAX_NOTATION = 36;
+struct Args
+{
+	int sourceRadix{};
+	int destRadix{};
+	std::string value;
+};
 
-constexpr auto* INVALID_NOTATION = "Некорректный ввод системы счисления. "
-	"Программа поддерживает нотации со 2 по 36.";
-constexpr auto* INVALID_NUMBER_NOTATION = "Недопустимое число для заданной системы счисления источника.";
-constexpr auto* INVALID_CONVERSION = "Ошибка конвертации!";
-constexpr auto* EXCEPTION_ERROR_TEMPLATE = "Ошибка: ";
+void PrintHelp()
+{
+	std::cout << "Usage:\n";
+	std::cout << "  WinOS: radix.exe <source notation> <destination notation> <value>\n";
+	std::cout << "  MacOS/Linux: ./radix <source notation> <destination notation> <value>\n";
+	std::cout << "Example: radix.exe 16 10 1F\n";
+	std::cout << "  -h (show usage)\n";
+}
 
-constexpr auto* GENERAL_USAGE_INFO = "Используйте терминал для использования программы!";
-constexpr auto* USAGE_INFO_WINDOWS = "Чтобы использовать программу на Win OS введите:";
-constexpr auto* USAGE_INFO_UNIX = "Чтобы использовать программу на MacOS/Linux введите:";
-constexpr auto* WINDOWS_EXECUTION = "radix.exe";
-constexpr auto* UNIX_EXECUTION = "./radix";
-constexpr auto* ARGUMENTS_SAMPLE = " <source notation> <destination notation> <value>";
+void PrintError(const std::string& msg)
+{
+	std::cout << "ERROR: " << msg << "\n";
+}
 
-// ascii, to MAX_NOTATION(36) - 1
-int CharToDigit(const char ch)
+// ascii code
+int CharToInt(const char ch)
 {
 	if (ch >= '0' && ch <= '9')
 	{
-		// 0(48)
 		return ch - '0';
 	}
 	if (ch >= 'A' && ch <= 'Z')
 	{
-		// А(65)
 		return ch - 'A' + 10;
 	}
-
-	return -1; // error
+	return -1;
 }
 
-char DigitToChar(const int digit)
+// symbol by ascii code
+char IntToChar(const int n)
 {
-	if (digit >= 0 && digit <= 9)
+	if (n >= 0 && n <= 9)
 	{
-		return '0' + digit;
+		return static_cast<char>('0' + n);
 	}
-	if (digit >= 10 && digit <= MAX_NOTATION - 1)
+	if (n >= 10 && n <= 35)
 	{
-		return 'A' + digit - 10;
+		return static_cast<char>('A' + n - 10);
 	}
-
-	return '\0'; // error
+	return '\0';
 }
 
 int StringToInt(const std::string& str, const int radix, bool& wasError)
 {
 	wasError = false;
+
 	if (str.empty())
 	{
 		wasError = true;
@@ -67,10 +68,10 @@ int StringToInt(const std::string& str, const int radix, bool& wasError)
 	}
 
 	size_t start = 0;
-	bool isNegative = false;
+	bool negative = false;
 	if (str[0] == '-')
 	{
-		isNegative = true;
+		negative = true;
 		start = 1;
 		if (str.length() == 1)
 		{
@@ -88,86 +89,83 @@ int StringToInt(const std::string& str, const int radix, bool& wasError)
 		}
 	}
 
-	// safe modulo accumulation
-	unsigned long long result = 0;
-	constexpr auto ULL_INT_MAX = static_cast<unsigned long long>(INT_MAX);
-	constexpr unsigned long long ULL_INT_MIN_ABS = ULL_INT_MAX + 1ULL; // |INT_MIN|
-
+	int result = 0;
 	for (size_t i = start; i < str.length(); ++i)
 	{
-		char ch = str[i];
-		int digit = CharToDigit(ch);
+		const int digit = CharToInt(str[i]);
+
 		if (digit == -1 || digit >= radix)
 		{
 			wasError = true;
 			return 0;
 		}
 
-		// Проверка переполнения: даже для отрицательных — модуль не должен превысить |INT_MIN|
-		if (result > (ULL_INT_MIN_ABS - digit) / radix)
+		// Check for overflow when multiplying by radix
+		if (negative)
 		{
-			wasError = true;
-			return 0;
+			// For negative
+			if (result < (INT_MIN + digit) / radix)
+			{
+				wasError = true;
+				return 0;
+			}
+			result = result * radix - digit;
 		}
-		result = result * radix + digit;
+		else
+		{
+			if (result > (INT_MAX - digit) / radix)
+			{
+				wasError = true;
+				return 0;
+			}
+			result = result * radix + digit;
+		}
 	}
 
-	if (isNegative)
-	{
-		if (result > ULL_INT_MIN_ABS)
-		{
-			wasError = true;
-			return 0;
-		}
-		if (result == ULL_INT_MIN_ABS)
-		{
-			return INT_MIN;
-		}
-		return -static_cast<int>(result);
-	}
-	if (result > ULL_INT_MAX)
-	{
-		wasError = true;
-		return 0;
-	}
-	return static_cast<int>(result);
+	return result;
 }
 
-std::string IntToString(const int number, const int radix, bool& wasError)
+std::string IntToString(int inputNumber, const int radix, bool& wasError)
 {
 	wasError = false;
-
-	if (number == 0)
+	if (radix < MIN_RADIX || radix > MAX_RADIX)
+	{
+		wasError = true;
+		return "";
+	}
+	if (inputNumber == 0)
 	{
 		return "0";
 	}
 
-	bool isNegative = false;
-	unsigned int num;
-	if (number == INT_MIN)
+	// Special handling for |INT_MIN|
+	if (inputNumber == INT_MIN)
 	{
-		num = static_cast<unsigned int>(INT_MIN);
-		isNegative = true;
-	}
-	else if (number < 0)
-	{
-		num = -static_cast<unsigned int>(number);
-		isNegative = true;
-	}
-	else
-	{
-		num = number;
+		std::string result;
+		unsigned int absValue = static_cast<unsigned int>(-(inputNumber + 1)) + 1U;
+		while (absValue != 0)
+		{
+			result = IntToChar(static_cast<int>(absValue % radix)) + result;
+			absValue /= radix;
+		}
+		return "-" + result;
 	}
 
 	std::string result;
-	while (num > 0)
+	bool negative = false;
+	if (inputNumber < 0)
 	{
-		const int digit = num % radix;
-		result = DigitToChar(digit) + result;
-		num = num / radix;
+		negative = true;
+		inputNumber = -inputNumber; // inputNumber != INT_MIN
 	}
 
-	if (isNegative)
+	while (inputNumber != 0)
+	{
+		result = IntToChar(inputNumber % radix) + result;
+		inputNumber /= radix;
+	}
+
+	if (negative)
 	{
 		result = "-" + result;
 	}
@@ -175,59 +173,107 @@ std::string IntToString(const int number, const int radix, bool& wasError)
 	return result;
 }
 
-int main(int argCount, char* argValues[])
+bool IsNumber(const std::string& str)
 {
-	if (argCount != DEFAULT_ARGUMENTS_COUNT)
+	if (str.empty())
 	{
-		std::cerr << GENERAL_USAGE_INFO << std::endl;
-		std::cerr << USAGE_INFO_WINDOWS << std::endl;
-		std::cerr << WINDOWS_EXECUTION << ARGUMENTS_SAMPLE << std::endl;
-		std::cerr << USAGE_INFO_UNIX << std::endl;
-		std::cerr << UNIX_EXECUTION << ARGUMENTS_SAMPLE << std::endl;
-
-		return 1;
+		return false;
 	}
 
-	try
+	size_t start = 0;
+	if (str[0] == '-' || str[0] == '+')
 	{
-		const int sourceRadix = std::stoi(argValues[SOURCE_NOTATION_TYPE_INDEX]);
-		const int destRadix = std::stoi(argValues[DESTINATION_NOTATION_TYPE_INDEX]);
-		const std::string value = argValues[VALUE_INDEX];
-
-		if (sourceRadix < MIN_NOTATION || sourceRadix > MAX_NOTATION || destRadix < MIN_NOTATION
-			|| destRadix > MAX_NOTATION)
+		if (str.length() == 1)
 		{
-			std::cerr << INVALID_NOTATION << std::endl;
-			return 1;
+			return false;
 		}
+		start = 1;
+	}
 
-		bool wasError = false;
-		const int number = StringToInt(value, sourceRadix, wasError);
-
-		if (wasError)
+	for (size_t i = start; i < str.length(); ++i)
+	{
+		if (const char ch = str[i]; !((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z')))
 		{
-			std::cerr << INVALID_NUMBER_NOTATION << std::endl;
-
-			return 1;
+			return false;
 		}
+	}
 
-		const std::string result = IntToString(number, destRadix, wasError);
+	return true;
+}
 
-		if (wasError)
-		{
-			std::cerr << INVALID_CONVERSION << std::endl;
+std::optional<Args> ParseArgs(const int argc, char* argv[])
+{
+	if (argc != 4)
+	{
+		return std::nullopt;
+	}
+	if (!IsNumber(argv[1]))
+	{
+		return std::nullopt;
+	}
+	if (!IsNumber(argv[2]))
+	{
+		return std::nullopt;
+	}
 
-			return 1;
-		}
+	// Parse source radix
+	Args args;
+	bool wasError = false;
+	const int sourceRadix = StringToInt(argv[1], 10, wasError);
+	if (wasError)
+	{
+		return std::nullopt;
+	}
+	args.sourceRadix = sourceRadix;
 
-		std::cout << result << std::endl;
+	// Parse dest radix
+	const int destRadix = StringToInt(argv[2], 10, wasError);
+	if (wasError)
+	{
+		return std::nullopt;
+	}
+	args.destRadix = destRadix;
 
+	args.value = argv[3];
+	if (args.sourceRadix < MIN_RADIX || args.sourceRadix > MAX_RADIX ||
+		args.destRadix < MIN_RADIX || args.destRadix > MAX_RADIX)
+	{
+		return std::nullopt;
+	}
+
+	return args;
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc == 2 && std::string(argv[1]) == "-h")
+	{
+		PrintHelp();
 		return 0;
 	}
-	catch (const std::exception& e)
-	{
-		std::cerr << EXCEPTION_ERROR_TEMPLATE << e.what() << std::endl;
 
+	const auto args = ParseArgs(argc, argv);
+	if (!args)
+	{
+		PrintError("Invalid arguments. Usage: radix.exe <source> <dest> <value>");
 		return 1;
 	}
+
+	bool wasError = false;
+	const int number = StringToInt(args->value, args->sourceRadix, wasError);
+	if (wasError)
+	{
+		PrintError("Invalid input value for the given source radix");
+		return 1;
+	}
+
+	const std::string result = IntToString(number, args->destRadix, wasError);
+	if (wasError)
+	{
+		PrintError("Conversion error during output formatting");
+		return 1;
+	}
+
+	std::cout << result << "\n";
+	return 0;
 }
