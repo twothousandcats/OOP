@@ -9,7 +9,9 @@ echo "Running tests..."
 echo "Test 1: 16 10 1F"
 output=$($EXEC 16 10 1F)
 if [ $? -eq 0 ] && [ "$output" = "31" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected '31'"
     exit 1
@@ -19,7 +21,9 @@ fi
 echo "Test 2: 10 2 10"
 output=$($EXEC 10 2 10)
 if [ $? -eq 0 ] && [ "$output" = "1010" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected '1010'"
     exit 1
@@ -29,7 +33,9 @@ fi
 echo "Test 3: 10 16 -255"
 output=$($EXEC 10 16 -255)
 if [ $? -eq 0 ] && [ "$output" = "-FF" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected '-FF'"
     exit 1
@@ -39,7 +45,9 @@ fi
 echo "Test 4: 10 8 0"
 output=$($EXEC 10 8 0)
 if [ $? -eq 0 ] && [ "$output" = "0" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected '0'"
     exit 1
@@ -49,7 +57,9 @@ fi
 echo "Test 5: 2 16 11111111"
 output=$($EXEC 2 16 11111111)
 if [ $? -eq 0 ] && [ "$output" = "FF" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected 'FF'"
     exit 1
@@ -59,7 +69,9 @@ fi
 echo "Test 6: 36 10 Z"
 output=$($EXEC 36 10 Z)
 if [ $? -eq 0 ] && [ "$output" = "35" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected '35'"
     exit 1
@@ -69,8 +81,9 @@ fi
 echo "Test 7: 1 10 10 (ошибка)"
 output=$($EXEC 1 10 10)
 if [ $? -ne 0 ]; then
-    echo "[PASS]"
     echo "(error as expected)"
+    echo "[PASS]"
+    echo ""
 else
     echo "Failed: should have failed but didn't"
     exit 1
@@ -80,8 +93,9 @@ fi
 echo "Test 8: 10 16 G (ошибка - G не цифра в 10-ричной)"
 output=$($EXEC 10 16 G)
 if [ $? -ne 0 ]; then
-    echo "[PASS]"
     echo "(error as expected)"
+    echo "[PASS]"
+    echo ""
 else
     echo "Failed: should have failed but didn't"
     exit 1
@@ -91,7 +105,9 @@ fi
 echo "Test 9: 10 16 2147483647"
 output=$($EXEC 10 16 2147483647)
 if [ $? -eq 0 ] && [ "$output" = "7FFFFFFF" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected '7FFFFFFF'"
     exit 1
@@ -101,7 +117,9 @@ fi
 echo "Test 10: 10 16 -2147483648"
 output=$($EXEC 10 16 -2147483648)
 if [ $? -eq 0 ] && [ "$output" = "-80000000" ]; then
+    echo $output
     echo "[PASS]"
+    echo ""
 else
     echo "Failed: got '$output', expected '-80000000'"
     exit 1
