@@ -5,9 +5,8 @@ TESTS_DIR=./tests
 
 echo "Running tests..."
 
-# Create test files
+# Create test dir
 mkdir -p $TESTS_DIR
-
 # Test 1: Valid matrix
 cat > $TESTS_DIR/matrix1.txt << EOF
 1	2	3
