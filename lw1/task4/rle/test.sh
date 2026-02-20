@@ -252,6 +252,91 @@ else
     exit 1
 fi
 
+# Test 11: Single byte file
+echo -ne "X" > $TESTS_DIR/single.txt
+echo "Test 11: Single byte packing/unpacking"
+./$EXEC pack $TESTS_DIR/single.txt $TESTS_DIR/single_packed.bin
+if [ $? -eq 0 ]; then
+    # Expected: 1, 'X' -> 2 bytes
+    actual_len=$(stat -f%z $TESTS_DIR/single_packed.bin 2>/dev/null || stat -c%s $TESTS_DIR/single_packed.bin)
+    if [ "$actual_len" -eq 2 ]; then
+        ./$EXEC unpack $TESTS_DIR/single_packed.bin $TESTS_DIR/single_unpacked.txt
+        cmp -s $TESTS_DIR/single.txt $TESTS_DIR/single_unpacked.txt && echo "[PASS]" || { echo "[FAIL]: Content mismatch"; exit 1; }
+    else
+        echo "[FAIL]: Expected length 2, got $actual_len"
+        exit 1
+    fi
+else
+    echo "[FAIL]: Single byte packing failed"
+    exit 1
+fi
+
+# Test 12: Invalid operation argument
+echo "Test 12: Invalid operation argument"
+./$EXEC compress input.txt output.txt 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "[PASS]"
+else
+    echo "[FAIL]: Should fail on invalid operation"
+    exit 1
+fi
+
+# Test 13: Missing arguments
+echo "Test 13: Missing arguments"
+./$EXEC pack input.txt 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "[PASS]"
+else
+    echo "[FAIL]: Should fail on missing arguments"
+    exit 1
+fi
+
+# Test 14: Non-existent input file
+echo "Test 14: Non-existent input file"
+./$EXEC pack /non/existent/file.txt $TESTS_DIR/out.bin 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "[PASS]"
+else
+    echo "[FAIL]: Should fail on non-existent file"
+    exit 1
+fi
+
+# Test 15: All possible byte values (0-255)
+python3 -c "import sys; sys.stdout.buffer.write(bytes(range(256)))" > $TESTS_DIR/all_bytes.bin
+echo "Test 15: All byte values (0-255) roundtrip"
+./$EXEC pack $TESTS_DIR/all_bytes.bin $TESTS_DIR/all_bytes_packed.bin
+if [ $? -eq 0 ]; then
+    ./$EXEC unpack $TESTS_DIR/all_bytes_packed.bin $TESTS_DIR/all_bytes_unpacked.bin
+    if [ $? -eq 0 ]; then
+        cmp -s $TESTS_DIR/all_bytes.bin $TESTS_DIR/all_bytes_unpacked.bin && echo "[PASS]" || { echo "[FAIL]: All bytes content mismatch"; exit 1; }
+    else
+        echo "[FAIL]: Unpacking all bytes failed"
+        exit 1
+    fi
+else
+    echo "[FAIL]: Packing all bytes failed"
+    exit 1
+fi
+
+# Test 16: Alternating pattern (expansion test)
+echo -ne "ABABABABABABABAB" > $TESTS_DIR/alternating.txt
+echo "Test 16: Alternating pattern (size expansion)"
+./$EXEC pack $TESTS_DIR/alternating.txt $TESTS_DIR/alternating_packed.bin
+if [ $? -eq 0 ]; then
+    # Original 16 bytes. Packed should be 16 * 2 = 32 bytes (1,'A', 1,'B'...)
+    actual_len=$(stat -f%z $TESTS_DIR/alternating_packed.bin 2>/dev/null || stat -c%s $TESTS_DIR/alternating_packed.bin)
+    if [ "$actual_len" -eq 32 ]; then
+        ./$EXEC unpack $TESTS_DIR/alternating_packed.bin $TESTS_DIR/alternating_unpacked.txt
+        cmp -s $TESTS_DIR/alternating.txt $TESTS_DIR/alternating_unpacked.txt && echo "[PASS]" || { echo "[FAIL]: Alternating content mismatch"; exit 1; }
+    else
+        echo "[FAIL]: Expected expanded length 32, got $actual_len"
+        exit 1
+    fi
+else
+    echo "[FAIL]: Alternating pattern packing failed"
+    exit 1
+fi
+
 echo "All tests passed!"
 rm -rf $TESTS_DIR
 exit 0

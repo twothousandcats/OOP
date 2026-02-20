@@ -90,6 +90,7 @@ bool ReadMatrix(std::istream& input, Matrix3x3& matrix)
 	return true;
 }
 
+// можно было попробовать через правило Саррюса
 double CalculateDeterminant(const Matrix3x3& matrix)
 {
 	return matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1])
@@ -128,7 +129,7 @@ double GetCofactor(const Matrix3x3& matrix, const size_t row, const size_t col)
 		: -minor;
 }
 
-Matrix3x3 CalculateInverse(const Matrix3x3& matrix)
+Matrix3x3 CalculateInverse(const Matrix3x3& matrix, const double determinant)
 {
 	Matrix3x3 cofactorMatrix;
 	// Вычисляем матрицу алгебраических дополнений
@@ -144,7 +145,6 @@ Matrix3x3 CalculateInverse(const Matrix3x3& matrix)
 	// Транспонируем матрицу алгебраических дополнений (присоединенная матрица)
 	// и делим на определитель
 	Matrix3x3 inverse;
-	const double determinant = CalculateDeterminant(matrix);
 	for (size_t i = 0; i < MATRIX_DIMENSION; ++i)
 	{
 		for (size_t j = 0; j < MATRIX_DIMENSION; ++j)
@@ -208,13 +208,14 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	if (const double determinant = CalculateDeterminant(matrix); determinant == 0.0)
+	const double determinant = CalculateDeterminant(matrix);
+	if ( determinant == 0.0)
 	{
 		std::cout << "Non-invertible\n";
 		return 0;
 	}
 
-	PrintInvertedMatrix(CalculateInverse(matrix));
+	PrintInvertedMatrix(CalculateInverse(matrix, determinant));
 
 	return 0;
 }

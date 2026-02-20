@@ -103,7 +103,6 @@ int StringToInt(const std::string& str, const int radix, bool& wasError)
 		// Check for overflow when multiplying by radix
 		if (negative)
 		{
-			// For negative
 			if (result < (INT_MIN + digit) / radix)
 			{
 				wasError = true;

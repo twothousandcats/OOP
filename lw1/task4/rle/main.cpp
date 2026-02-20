@@ -4,6 +4,8 @@
 #include <vector>
 #include <optional>
 
+constexpr int MAX_BYTES = 255;
+
 enum class Operation
 {
 	Pack,
@@ -12,7 +14,7 @@ enum class Operation
 
 struct Args
 {
-	Operation operation;
+	Operation operation = Operation::Pack;
 	std::string inputPath;
 	std::string outputPath;
 };
@@ -103,7 +105,7 @@ void Pack(std::istream& input, std::ostream& output)
 			continue;
 		}
 
-		if (currentByte == lastByte && count < 255)
+		if (currentByte == lastByte && count < MAX_BYTES)
 		{
 			count++;
 		}
@@ -130,7 +132,7 @@ bool Unpack(std::istream& input, std::ostream& output)
 	char countByte, valueByte;
 	while (input.get(countByte))
 	{
-		const unsigned char count = static_cast<unsigned char>(countByte);
+		const auto count = static_cast<unsigned char>(countByte);
 		if (count == 0)
 		{
 			return false; // Invalid count
