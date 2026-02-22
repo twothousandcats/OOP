@@ -29,13 +29,13 @@ void ProcessNumbers(std::vector<double>& numbers)
 		return;
 	}
 
-	// Вычисляем сумму положительных элементов
+	// calc positive el sum
 	double sumPositive = std::accumulate(numbers.begin(), numbers.end(), 0.0,
 		[](double acc, double val) {
 			return (val > 0) ? acc + val : acc;
 		});
 
-	// Подсчитываем количество положительных элементов
+	// count the number of constituent elements
 	int countPositive = static_cast<int>(std::ranges::count_if(numbers,
 		[](double val) { return val > 0; }));
 
@@ -45,7 +45,7 @@ void ProcessNumbers(std::vector<double>& numbers)
 		average = sumPositive / countPositive;
 	}
 
-	// Прибавляем среднее ко всем элементам
+	// Add the avg to all elements
 	std::ranges::transform(numbers, numbers.begin(),
 		[average](double val) { return val + average; });
 }
