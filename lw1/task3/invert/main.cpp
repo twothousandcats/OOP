@@ -6,6 +6,7 @@
 #include <array>
 
 constexpr size_t MATRIX_DIMENSION = 3;
+constexpr double EPSILON = 1e-9;
 
 using Matrix3x3 = std::array<std::array<double, MATRIX_DIMENSION>, MATRIX_DIMENSION>;
 
@@ -90,7 +91,7 @@ bool ReadMatrix(std::istream& input, Matrix3x3& matrix)
 	return true;
 }
 
-// можно было попробовать через правило Саррюса
+// попробовать через правило Саррюса
 double CalculateDeterminant(const Matrix3x3& matrix)
 {
 	return matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1])
@@ -129,11 +130,20 @@ double GetCofactor(const Matrix3x3& matrix, const size_t row, const size_t col)
 		: -minor;
 }
 
-Matrix3x3 CalculateInverse(const Matrix3x3& matrix, const double determinant)
+// 1/det * (Cofactor)T
+// newMatrix = CalculateInverse(matrix)
+std::optional<Matrix3x3> CalculateInverse(const Matrix3x3& matrix)
 {
-	Matrix3x3 cofactorMatrix;
-	// Вычисляем матрицу алгебраических дополнений
+	const double determinant = CalculateDeterminant(matrix);
+
+	// Проверка детерминанта теперь внутри функции
+	if (std::abs(determinant) < EPSILON)
+	{
+		return std::nullopt;
+	}
+
 	// Calculate algebraic complement matrix
+	Matrix3x3 cofactorMatrix;
 	for (size_t i = 0; i < MATRIX_DIMENSION; ++i)
 	{
 		for (size_t j = 0; j < MATRIX_DIMENSION; ++j)
@@ -142,8 +152,6 @@ Matrix3x3 CalculateInverse(const Matrix3x3& matrix, const double determinant)
 		}
 	}
 
-	// Транспонируем матрицу алгебраических дополнений (присоединенная матрица)
-	// и делим на определитель
 	Matrix3x3 inverse;
 	for (size_t i = 0; i < MATRIX_DIMENSION; ++i)
 	{
@@ -198,6 +206,7 @@ int main(int argc, char* argv[])
 			std::cout << "Invalid matrix\n";
 			return 1;
 		}
+
 		input = &fileStream;
 	}
 
@@ -208,14 +217,13 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	const double determinant = CalculateDeterminant(matrix);
-	if ( determinant == 0.0)
+	const auto invertedMatrix = CalculateInverse(matrix);
+	if (!invertedMatrix.has_value())
 	{
 		std::cout << "Non-invertible\n";
 		return 0;
 	}
 
-	PrintInvertedMatrix(CalculateInverse(matrix, determinant));
-
+	PrintInvertedMatrix(invertedMatrix.value());
 	return 0;
 }

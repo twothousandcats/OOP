@@ -50,7 +50,7 @@ else
     exit 1
 fi
 
-# Test 3: Non-invertible matrix from example 3
+# Test 3: Non-invertible matrix
 cat > $TESTS_DIR/matrix3.txt << EOF
 1	2	3
 2	4	6
@@ -185,6 +185,24 @@ output=$(./$EXEC $TESTS_DIR/matrix10.txt)
 
 if [[ $output != *"Error"* ]] && [[ $output != *"Non-invertible"* ]] && [[ $output != *"Invalid"* ]]; then
     echo "$output"
+    echo "[PASS]"
+    echo ""
+else
+    echo "Failed: got '$output'"
+    exit 1
+fi
+
+# Test 11: invalid
+cat > $TESTS_DIR/matrix10.txt << EOF
+0	0	0
+0	0	0
+0	0	0
+EOF
+
+echo "Test 11: invalid"
+output=$(./$EXEC $TESTS_DIR/matrix11.txt)
+
+if [ $? -ne 0 ]; then
     echo "[PASS]"
     echo ""
 else

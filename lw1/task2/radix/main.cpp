@@ -60,7 +60,6 @@ char IntToChar(const int n)
 int StringToInt(const std::string& str, const int radix, bool& wasError)
 {
 	wasError = false;
-
 	if (str.empty())
 	{
 		wasError = true;
@@ -69,20 +68,23 @@ int StringToInt(const std::string& str, const int radix, bool& wasError)
 
 	size_t start = 0;
 	bool negative = false;
-	if (str[0] == '-')
+	if (str[0] == '-' || str[0] == '+')
 	{
-		negative = true;
-		start = 1;
 		if (str.length() == 1)
 		{
 			wasError = true;
 			return 0;
 		}
-	}
-	else if (str[0] == '+')
-	{
 		start = 1;
-		if (str.length() == 1)
+		if (str[0] == '-')
+		{
+			negative = true;
+		}
+	}
+
+	for (size_t i = start; i < str.length(); ++i)
+	{
+		if (const char ch = str[i]; !((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z')))
 		{
 			wasError = true;
 			return 0;
@@ -101,6 +103,7 @@ int StringToInt(const std::string& str, const int radix, bool& wasError)
 		}
 
 		// Check for overflow when multiplying by radix
+		// как можно проще?
 		if (negative)
 		{
 			if (result < (INT_MIN + digit) / radix)
@@ -127,90 +130,45 @@ int StringToInt(const std::string& str, const int radix, bool& wasError)
 std::string IntToString(int inputNumber, const int radix, bool& wasError)
 {
 	wasError = false;
-	if (radix < MIN_RADIX || radix > MAX_RADIX)
-	{
-		wasError = true;
-		return "";
-	}
 	if (inputNumber == 0)
 	{
 		return "0";
 	}
 
-	// Special handling for |INT_MIN|
-	if (inputNumber == INT_MIN)
-	{
-		std::string result;
-		unsigned int absValue = static_cast<unsigned int>(-(inputNumber + 1)) + 1U;
-		while (absValue != 0)
-		{
-			result = IntToChar(static_cast<int>(absValue % radix)) + result;
-			absValue /= radix;
-		}
-		return "-" + result;
-	}
-
 	std::string result;
+	result.reserve(32); // int >= 2 radix
 	bool negative = false;
+	unsigned int absValue;
 	if (inputNumber < 0)
 	{
 		negative = true;
-		inputNumber = -inputNumber; // inputNumber != INT_MIN
+		absValue = static_cast<unsigned int>(-(inputNumber + 1)) + 1U;
+	}
+	else
+	{
+		absValue = static_cast<unsigned int>(inputNumber);
 	}
 
-	while (inputNumber != 0)
+	while (absValue != 0)
 	{
-		result = IntToChar(inputNumber % radix) + result;
-		inputNumber /= radix;
+		const int digit = static_cast<int>(absValue % radix);
+		result.push_back(IntToChar(digit));
+		absValue /= radix;
 	}
 
 	if (negative)
 	{
-		result = "-" + result;
+		result.push_back('-');
 	}
+
+	std::ranges::reverse(result);
 
 	return result;
-}
-
-bool IsNumber(const std::string& str)
-{
-	if (str.empty())
-	{
-		return false;
-	}
-
-	size_t start = 0;
-	if (str[0] == '-' || str[0] == '+')
-	{
-		if (str.length() == 1)
-		{
-			return false;
-		}
-		start = 1;
-	}
-
-	for (size_t i = start; i < str.length(); ++i)
-	{
-		if (const char ch = str[i]; !((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z')))
-		{
-			return false;
-		}
-	}
-
-	return true;
 }
 
 std::optional<Args> ParseArgs(const int argc, char* argv[])
 {
 	if (argc != 4)
-	{
-		return std::nullopt;
-	}
-	if (!IsNumber(argv[1]))
-	{
-		return std::nullopt;
-	}
-	if (!IsNumber(argv[2]))
 	{
 		return std::nullopt;
 	}
@@ -234,8 +192,10 @@ std::optional<Args> ParseArgs(const int argc, char* argv[])
 	args.destRadix = destRadix;
 
 	args.value = argv[3];
-	if (args.sourceRadix < MIN_RADIX || args.sourceRadix > MAX_RADIX ||
-		args.destRadix < MIN_RADIX || args.destRadix > MAX_RADIX)
+	if (args.sourceRadix < MIN_RADIX
+		|| args.sourceRadix > MAX_RADIX
+		|| args.destRadix < MIN_RADIX
+		|| args.destRadix > MAX_RADIX)
 	{
 		return std::nullopt;
 	}
