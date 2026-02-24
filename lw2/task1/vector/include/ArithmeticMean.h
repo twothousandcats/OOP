@@ -64,6 +64,7 @@ inline std::string GetFormattedSortedOutput(const std::vector<double>& numbers)
 	return oss.str();
 }
 
+// is that a bit faster to write from prepared string?
 inline void PrintSortedNumbers(const std::vector<double>& numbers)
 {
 	std::cout << GetFormattedSortedOutput(numbers) << std::endl;
