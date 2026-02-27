@@ -195,8 +195,6 @@ int main(int argc, char* argv[])
 	}
 
 	Dictionary dictionary;
-	// Assuming LoadFromFile returns void or status we ignore for simplicity as per original logic
-	// If it can fail critically, check status here.
 	dictionary.LoadFromFile(args.dictionaryPath);
 
 	const auto sessionResult = RunInteractiveSession(dictionary);

@@ -14,7 +14,7 @@ void CleanupTestFile()
 	}
 }
 
-TEST_CASE("Dictionary loads basic entries", "[load]")
+TEST_CASE("Dictionary loads basic entries", "[default]")
 {
 	CleanupTestFile();
 	{
@@ -33,7 +33,7 @@ TEST_CASE("Dictionary loads basic entries", "[load]")
 	CleanupTestFile();
 }
 
-TEST_CASE("Dictionary handles case insensitivity", "[bonus-case]")
+TEST_CASE("Dictionary handles case insensitivity", "[case-sensitive]")
 {
 	CleanupTestFile();
 	Dictionary dict;
@@ -46,7 +46,7 @@ TEST_CASE("Dictionary handles case insensitivity", "[bonus-case]")
 	CleanupTestFile();
 }
 
-TEST_CASE("Dictionary supports multiple translations", "[bonus-multi]")
+TEST_CASE("Dictionary supports multiple translations", "[no-rewrite]")
 {
 	Dictionary dict;
 	dict.AddTranslation("run", "бежать");
@@ -60,7 +60,7 @@ TEST_CASE("Dictionary supports multiple translations", "[bonus-multi]")
 	CHECK(std::find(result.begin(), result.end(), "управлять") != result.end());
 }
 
-TEST_CASE("Dictionary supports bidirectional translation", "[bonus-bidir]")
+TEST_CASE("Dictionary supports bidirectional translation", "[bidirectional]")
 {
 	Dictionary dict;
 	dict.AddTranslation("cat", "кот");
