@@ -4,6 +4,7 @@
 #include <vector>
 #include <optional>
 
+// todo: перешел на структуру входных аргументов
 struct Args
 {
 	std::string inputPath;

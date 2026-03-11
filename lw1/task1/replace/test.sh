@@ -63,6 +63,7 @@ else
     echo "[FAIL]"
 fi
 
+# todo: проверка на права доступа - done
 # Тест 7: Проверка прав на чтение файла
 echo -e "\nTest 7: Read permissions error"
 touch $TESTS_DIR/no_read.txt

@@ -91,7 +91,6 @@ bool ReadMatrix(std::istream& input, Matrix3x3& matrix)
 	return true;
 }
 
-// попробовать через правило Саррюса
 double CalculateDeterminant(const Matrix3x3& matrix)
 {
 	return matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1])
@@ -123,7 +122,6 @@ double GetMinor(const Matrix3x3& matrix, const size_t excludeRow, const size_t e
 double GetCofactor(const Matrix3x3& matrix, const size_t row, const size_t col)
 {
 	const double minor = GetMinor(matrix, row, col);
-	// Знак зависит от четности суммы индексов
 	// The sign depends on the parity of the sum of the indices: (-1)^(i+j)
 	return (row + col) % 2 == 0
 		? minor
@@ -131,12 +129,10 @@ double GetCofactor(const Matrix3x3& matrix, const size_t row, const size_t col)
 }
 
 // 1/det * (Cofactor)T
-// newMatrix = CalculateInverse(matrix)
-std::optional<Matrix3x3> CalculateInverse(const Matrix3x3& matrix)
+// newMatrix = InverseMatrix(matrix)
+std::optional<Matrix3x3> InverseMatrix(const Matrix3x3& matrix)
 {
 	const double determinant = CalculateDeterminant(matrix);
-
-	// Проверка детерминанта теперь внутри функции
 	if (std::abs(determinant) < EPSILON)
 	{
 		return std::nullopt;
@@ -217,7 +213,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	const auto invertedMatrix = CalculateInverse(matrix);
+	const auto invertedMatrix = InverseMatrix(matrix);
 	if (!invertedMatrix.has_value())
 	{
 		std::cout << "Non-invertible\n";

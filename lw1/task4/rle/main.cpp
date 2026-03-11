@@ -1,11 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
 #include <optional>
 
 constexpr int MAX_BYTES = 255;
-
 enum class Operation
 {
 	Pack,
@@ -88,20 +86,19 @@ bool OpenFiles(
 	return true;
 }
 
+// отказать от first
 void Pack(std::istream& input, std::ostream& output)
 {
 	char currentByte;
 	char lastByte = 0;
 	int count = 0;
 
-	bool first = true;
 	while (input.get(currentByte))
 	{
-		if (first)
+		if (count == 0)
 		{
 			lastByte = currentByte;
 			count = 1;
-			first = false;
 			continue;
 		}
 
@@ -119,7 +116,7 @@ void Pack(std::istream& input, std::ostream& output)
 		}
 	}
 
-	if (!first)
+	if (count > 0)
 	{
 		// There was at least one byte
 		output.put(static_cast<char>(count));

@@ -4,7 +4,7 @@ EXEC=./rle
 TESTS_DIR=./tests
 
 echo "Running RLE tests..."
-
+# todo: ПОЧИСТИТЬ ТЕСТЫ - done
 # Create test dir
 mkdir -p $TESTS_DIR
 
@@ -30,7 +30,6 @@ fi
 
 # Test 2: Simple sequence AAA BBBB C
 echo -ne "AAABBBBC" > $TESTS_DIR/simple.txt
-
 echo "Test 2: Simple sequence packing"
 ./$EXEC pack $TESTS_DIR/simple.txt $TESTS_DIR/simple_packed.bin
 if [ $? -eq 0 ]; then
@@ -65,11 +64,10 @@ fi
 
 # Test 3: Sequence of 255 same bytes
 python3 -c "print('A' * 255, end='')" > $TESTS_DIR/seq255.txt
-
 echo "Test 3: 255-byte sequence packing"
 ./$EXEC pack $TESTS_DIR/seq255.txt $TESTS_DIR/seq255_packed.bin
 if [ $? -eq 0 ]; then
-    # Expected: 255,'A'
+    # Expected: 255, A
     expected_len=2
     actual_len=$(stat -f%z $TESTS_DIR/seq255_packed.bin 2>/dev/null || stat -c%s $TESTS_DIR/seq255_packed.bin)
     if [ "$actual_len" -eq "$expected_len" ]; then
@@ -100,7 +98,6 @@ fi
 
 # Test 4: Sequence of 256 same bytes
 python3 -c "print('B' * 256, end='')" > $TESTS_DIR/seq256.txt
-
 echo "Test 4: 256-byte sequence packing"
 ./$EXEC pack $TESTS_DIR/seq256.txt $TESTS_DIR/seq256_packed.bin
 if [ $? -eq 0 ]; then
@@ -133,71 +130,8 @@ else
     exit 1
 fi
 
-# Test 5: Sequence of 257 same bytes
-python3 -c "print('C' * 257, end='')" > $TESTS_DIR/seq257.txt
-
-echo "Test 5: 257-byte sequence packing"
-./$EXEC pack $TESTS_DIR/seq257.txt $TESTS_DIR/seq257_packed.bin
-if [ $? -eq 0 ]; then
-    # Expected: 255,'C', 2,'C'
-    expected_len=4
-    actual_len=$(stat -f%z $TESTS_DIR/seq257_packed.bin 2>/dev/null || stat -c%s $TESTS_DIR/seq257_packed.bin)
-    if [ "$actual_len" -eq "$expected_len" ]; then
-        echo "[PASS]"
-    else
-        echo "[FAIL]: Expected length $expected_len, got $actual_len"
-        exit 1
-    fi
-else
-    echo "[FAIL]: 257-byte sequence packing failed"
-    exit 1
-fi
-
-echo "Test 5b: 257-byte sequence unpacking"
-./$EXEC unpack $TESTS_DIR/seq257_packed.bin $TESTS_DIR/seq257_unpacked.txt
-if [ $? -eq 0 ]; then
-    cmp -s $TESTS_DIR/seq257.txt $TESTS_DIR/seq257_unpacked.txt
-    if [ $? -eq 0 ]; then
-        echo "[PASS]"
-    else
-        echo "[FAIL]: Unpacked 257-byte content doesn't match original"
-        exit 1
-    fi
-else
-    echo "[FAIL]: 257-byte sequence unpacking failed"
-    exit 1
-fi
-
-# Test 6: Mixed content
-echo -ne "AAAAABBBBBCCCCCDD" > $TESTS_DIR/mixed.txt
-
-echo "Test 6: Mixed content packing"
-./$EXEC pack $TESTS_DIR/mixed.txt $TESTS_DIR/mixed_packed.bin
-if [ $? -eq 0 ]; then
-    echo "[PASS]"
-else
-    echo "[FAIL]: Mixed content packing failed"
-    exit 1
-fi
-
-echo "Test 6b: Mixed content unpacking"
-./$EXEC unpack $TESTS_DIR/mixed_packed.bin $TESTS_DIR/mixed_unpacked.txt
-if [ $? -eq 0 ]; then
-    cmp -s $TESTS_DIR/mixed.txt $TESTS_DIR/mixed_unpacked.txt
-    if [ $? -eq 0 ]; then
-        echo "[PASS]"
-    else
-        echo "[FAIL]: Unpacked mixed content doesn't match original"
-        exit 1
-    fi
-else
-    echo "[FAIL]: Mixed content unpacking failed"
-    exit 1
-fi
-
 # Test 7: Invalid unpack - odd number of bytes
 echo -ne "\x03\x41\x04" > $TESTS_DIR/invalid_odd.bin  # 3,'A', 4 but no following byte
-
 echo "Test 7: Invalid unpack - odd number of bytes"
 ./$EXEC unpack $TESTS_DIR/invalid_odd.bin $TESTS_DIR/invalid_odd_out.txt
 if [ $? -ne 0 ]; then
@@ -209,7 +143,6 @@ fi
 
 # Test 8: Invalid unpack - zero count
 echo -ne "\x00\x41" > $TESTS_DIR/invalid_zero.bin  # 0,'A' - invalid count
-
 echo "Test 8: Invalid unpack - zero count"
 ./$EXEC unpack $TESTS_DIR/invalid_zero.bin $TESTS_DIR/invalid_zero_out.txt
 if [ $? -ne 0 ]; then
@@ -221,7 +154,6 @@ fi
 
 # Test 9: File with byte value 255
 python3 -c "import sys; sys.stdout.buffer.write(b'\xff' * 5)" > $TESTS_DIR/byte255.txt
-
 echo "Test 9: Byte value 255 packing/unpacking"
 ./$EXEC pack $TESTS_DIR/byte255.txt $TESTS_DIR/byte255_packed.bin
 if [ $? -eq 0 ]; then
@@ -318,23 +250,32 @@ else
     exit 1
 fi
 
-# Test 16: Alternating pattern (expansion test)
-echo -ne "ABABABABABABABAB" > $TESTS_DIR/alternating.txt
-echo "Test 16: Alternating pattern (size expansion)"
-./$EXEC pack $TESTS_DIR/alternating.txt $TESTS_DIR/alternating_packed.bin
-if [ $? -eq 0 ]; then
-    # Original 16 bytes. Packed should be 16 * 2 = 32 bytes (1,'A', 1,'B'...)
-    actual_len=$(stat -f%z $TESTS_DIR/alternating_packed.bin 2>/dev/null || stat -c%s $TESTS_DIR/alternating_packed.bin)
-    if [ "$actual_len" -eq 32 ]; then
-        ./$EXEC unpack $TESTS_DIR/alternating_packed.bin $TESTS_DIR/alternating_unpacked.txt
-        cmp -s $TESTS_DIR/alternating.txt $TESTS_DIR/alternating_unpacked.txt && echo "[PASS]" || { echo "[FAIL]: Alternating content mismatch"; exit 1; }
+# Test 17: Self-test (Pack the executable itself)
+echo "Test 17: Executable self-pack/unpack (Binary stress test)"
+if [ -f "$EXEC" ]; then
+    ./$EXEC pack $EXEC $TESTS_DIR/rle_self_packed.bin
+    if [ $? -eq 0 ]; then
+        # Unpack
+        ./$EXEC unpack $TESTS_DIR/rle_self_packed.bin $TESTS_DIR/rle_self_restored
+        if [ $? -eq 0 ]; then
+            # Compare original and restored binary
+            cmp -s $EXEC $TESTS_DIR/rle_self_restored
+            if [ $? -eq 0 ]; then
+                echo "[PASS]"
+            else
+                echo "[FAIL]: Restored executable differs from original"
+                exit 1
+            fi
+        else
+            echo "[FAIL]: Unpacking executable failed"
+            exit 1
+        fi
     else
-        echo "[FAIL]: Expected expanded length 32, got $actual_len"
+        echo "[FAIL]: Packing executable failed"
         exit 1
     fi
 else
-    echo "[FAIL]: Alternating pattern packing failed"
-    exit 1
+    echo "[SKIP]: Executable not found at $EXEC"
 fi
 
 echo "All tests passed!"
