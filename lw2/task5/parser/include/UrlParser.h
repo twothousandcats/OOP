@@ -21,9 +21,10 @@ struct Components
 	std::string host;
 	std::string document;
 };
-
 }
 
+// todo: ParseURL ret Components
+// нет членов класса, такие классы не имеют особой необходимости (не нужно поддерживать инвариант членов класса)
 class UrlParser
 {
 public:

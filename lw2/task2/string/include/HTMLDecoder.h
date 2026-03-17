@@ -4,8 +4,10 @@
 #include <unordered_map>
 #include <iostream>
 
+// todo: вынести в реализацию
+using HTMLEntities = std::unordered_map<std::string_view, char>;
 // known entities
-inline const std::unordered_map<std::string_view, char> htmlEntities = {
+inline static const HTMLEntities htmlEntities = {
 	{ "quot", '"' },
 	{ "apos", '\'' },
 	{ "lt", '<' },
@@ -13,6 +15,9 @@ inline const std::unordered_map<std::string_view, char> htmlEntities = {
 	{ "amp", '&' }
 };
 
+// todo: string_view как аргумент
+// todo: или аллоцировать
+// todo: неожиданное изменение outChar, пересмотреть
 inline size_t DecodeEntity(const std::string& html, size_t pos, char& outChar)
 {
 	if (pos >= html.size() || html[pos] != '&')
@@ -28,7 +33,6 @@ inline size_t DecodeEntity(const std::string& html, size_t pos, char& outChar)
 
 	// string_view for searching and copy string
 	const std::string_view name = std::string_view(html).substr(pos + 1, semiPos - pos - 1);
-
 	if (const auto it = htmlEntities.find(name); it != htmlEntities.end())
 	{
 		outChar = it->second;
@@ -38,6 +42,8 @@ inline size_t DecodeEntity(const std::string& html, size_t pos, char& outChar)
 	return 0;
 }
 
+// посчитать O
+// можно свести к 0(n)
 inline std::string HtmlDecode(const std::string& html)
 {
 	std::string result;

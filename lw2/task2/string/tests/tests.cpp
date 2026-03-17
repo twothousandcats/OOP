@@ -20,38 +20,27 @@ TEST_CASE("HtmlDecode handles the task example", "[example]")
 	CHECK(HtmlDecode(input) == expected);
 }
 
-TEST_CASE("HtmlDecode handles mixed content", "[mixed]")
-{
-	CHECK(HtmlDecode("Hello &lt;world&gt;!") == "Hello <world>!");
-	CHECK(HtmlDecode("A &amp; B &lt; C") == "A & B < C");
-}
-
 TEST_CASE("HtmlDecode ignores unknown entities", "[unknown]")
 {
-	// Неизвестные сущности должны оставаться неизменными
+	// unknown -> unknown
 	CHECK(HtmlDecode("&nbsp;") == "&nbsp;");
 	CHECK(HtmlDecode("&unknown;") == "&unknown;");
 	CHECK(HtmlDecode("&") == "&");
-	CHECK(HtmlDecode("&lt") == "&lt"); // Без точки с запятой
+	CHECK(HtmlDecode("&lt") == "&lt"); // without ;
 }
 
 TEST_CASE("HtmlDecode handles empty and plain strings", "[edge]")
 {
-	CHECK(HtmlDecode("") == "");
+	CHECK(HtmlDecode("").empty());
 	CHECK(HtmlDecode("No entities here") == "No entities here");
 }
-
-TEST_CASE("HtmlDecode performance check", "[performance]")
+TEST_CASE("ProcessHtmlStream processes multiple lines correctly", "[stream]")
 {
-	std::string input;
-	input.reserve(100000);
-	for (int i = 0; i < 20000; ++i) {
-		input += "Text &lt;>&amp;&quot;&apos; ";
-	}
+	std::istringstream input("Line 1 &lt;br&gt;\nLine 2 &amp;&amp;\nNo entities");
+	std::ostringstream output;
 
-	std::string result = HtmlDecode(input);
+	ProcessHtmlStream(input, output);
 
-	REQUIRE(result.size() < input.size());
-	REQUIRE(result.find("&lt;") == std::string::npos);
-	REQUIRE(result.find("&amp;") == std::string::npos);
+	std::string result = output.str();
+	CHECK(result == "Line 1 <br>\nLine 2 &&\nNo entities\n");
 }

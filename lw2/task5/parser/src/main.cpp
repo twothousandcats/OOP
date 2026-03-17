@@ -2,12 +2,17 @@
 #include <string>
 #include "UrlParser.h"
 
+void PrintError()
+{
+	std::cout << "ERROR\n" << std::endl;
+}
+
 int main()
 {
 	std::string inputLine;
 	if (!std::getline(std::cin, inputLine))
 	{
-		std::cout << "ERROR\n";
+		PrintError();
 		return 0;
 	}
 
@@ -20,7 +25,7 @@ int main()
 	}
 	else
 	{
-		std::cout << "ERROR\n";
+		PrintError();
 	}
 
 	return 0;

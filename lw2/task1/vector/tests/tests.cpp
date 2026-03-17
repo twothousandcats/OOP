@@ -21,7 +21,6 @@ TEST_CASE("ReadNumbers: Invalid input (non-numeric)", "[ReadNumbers]") {
     std::istringstream input("- 2 3");
 
     REQUIRE(ReadNumbers(numbers, input) == false);
-    // Числа до ошибки могли считаться, но функция должна вернуть false
 }
 
 TEST_CASE("ReadNumbers: Empty input", "[ReadNumbers]") {
@@ -70,14 +69,4 @@ TEST_CASE("PrintSortedNumbers: Rounding (Example 1)", "[PrintSortedNumbers]") {
     std::string output = GetFormattedSortedOutput(numbers);
 
     REQUIRE(output == "3.220 4.220 5.879 ");
-}
-
-TEST_CASE("Integration: Full flow Example 4 (Error)", "[Integration]") {
-	std::istringstream input("- 2 3");
-
-    if (std::vector<double> numbers; !ReadNumbers(numbers, input)) {
-        REQUIRE(true);
-    } else {
-        FAIL("Expected error on invalid input");
-    }
 }

@@ -3,19 +3,21 @@
 
 const std::regex& UrlParser::GetUrlRegex()
 {
+	// ports, domain(except :, /), port(opt), any letters(opt)
 	static const std::regex urlRegex(
 		R"(^(http|https|ftp)://([^:/\s]+)(?::(\d+))?(/.*)?$)",
-		std::regex::optimize | std::regex::icase
+		std::regex::optimize
+		| std::regex::icase
 		);
 	return urlRegex;
 }
 
-bool UrlParser::IsValidPort(int port)
+bool UrlParser::IsValidPort(const int port)
 {
 	return port >= 1 && port <= 65535;
 }
 
-int UrlParser::GetDefaultPort(url::Protocol protocol)
+int UrlParser::GetDefaultPort(const url::Protocol protocol)
 {
 	switch (protocol)
 	{
@@ -35,15 +37,21 @@ std::optional<url::Protocol> UrlParser::StringToProtocol(const std::string& prot
 	std::ranges::transform(
 		lowerProto,
 		lowerProto.begin(),
-		[](unsigned char ch) { return std::tolower(ch); }
+		[](const unsigned char ch) { return std::tolower(ch); }
 		);
 
 	if (lowerProto == "http")
+	{
 		return url::Protocol::HTTP;
+	}
 	if (lowerProto == "https")
+	{
 		return url::Protocol::HTTPS;
+	}
 	if (lowerProto == "ftp")
+	{
 		return url::Protocol::FTP;
+	}
 
 	return std::nullopt;
 }
@@ -52,7 +60,6 @@ bool UrlParser::ExtractProtocol(const std::smatch& match, url::Protocol& outProt
 {
 	const std::string protoStr = match[1].str();
 	const auto protocolOpt = StringToProtocol(protoStr);
-
 	if (!protocolOpt.has_value())
 	{
 		return false;
@@ -75,20 +82,20 @@ bool UrlParser::ExtractHost(const std::smatch& match, std::string& outHost)
 	return true;
 }
 
-bool UrlParser::ExtractPort(const std::smatch& match, url::Protocol protocol, int& outPort)
+bool UrlParser::ExtractPort(const std::smatch& match, const url::Protocol protocol, int& outPort)
 {
 	if (match[3].matched)
 	{
 		const std::string portStr = match[3].str();
 		try
 		{
-			unsigned long portVal = std::stoul(portStr);
+			const int portVal = std::stoi(portStr);
 
-			if (!IsValidPort(static_cast<int>(portVal)))
+			if (!IsValidPort(portVal))
 			{
 				return false;
 			}
-			outPort = static_cast<int>(portVal);
+			outPort = portVal;
 		}
 		catch (const std::exception&)
 		{
@@ -127,7 +134,7 @@ bool UrlParser::ParseURL(const std::string& url, url::Components& outComponents)
 		return false;
 	}
 
-	const std::regex& regex = GetUrlRegex();
+	const std::regex& regex = GetUrlRegex(); // get regex inst
 	std::smatch match;
 
 	if (!std::regex_match(url, match, regex))
@@ -135,22 +142,11 @@ bool UrlParser::ParseURL(const std::string& url, url::Components& outComponents)
 		return false;
 	}
 
-	if (!ExtractProtocol(match, outComponents.protocol))
-	{
-		return false;
-	}
-
-	if (!ExtractHost(match, outComponents.host))
-	{
-		return false;
-	}
-
-	if (!ExtractPort(match, outComponents.protocol, outComponents.port))
-	{
-		return false;
-	}
-
-	if (!ExtractDocument(match, outComponents.document))
+	// todo: передавать сразу компонент match
+	if (!ExtractProtocol(match, outComponents.protocol)
+		|| !ExtractHost(match, outComponents.host)
+		|| !ExtractPort(match, outComponents.protocol, outComponents.port)
+		|| !ExtractDocument(match, outComponents.document))
 	{
 		return false;
 	}
