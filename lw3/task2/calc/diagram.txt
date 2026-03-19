@@ -1,0 +1,73 @@
+classDiagram
+    class Value {
+        -double m_data
+        +Value()
+        +Value(double)
+        +static nan() Value
+        +isDefined() bool
+        +get() double
+        +print(ostream&) void
+        +static add(Value, Value) Value
+        +static sub(Value, Value) Value
+        +static mul(Value, Value) Value
+        +static div(Value, Value) Value
+    }
+
+    class OpType {
+        <<enumeration>>
+        None
+        Add
+        Sub
+        Mul
+        Div
+    }
+
+    class FunctionDef {
+        +string operand1
+        +string operand2
+        +OpType op
+    }
+
+    class SymbolTable {
+        -map<string, Value> m_variables
+        -map<string, FunctionDef> m_functions
+        +declareVariable(string) bool
+        +hasSymbol(string) bool
+        +isVariable(string) bool
+        +isFunction(string) bool
+        +setVariableValue(string, Value) void
+        +getVariableValue(string) Value
+        +declareFunction(string, FunctionDef) bool
+        +evaluateFunction(string) Value
+        +getSortedVariableNames() vector<string>
+        +getSortedFunctionNames() vector<string>
+    }
+
+    class Calculator {
+        -istream& m_in
+        -ostream& m_out
+        -SymbolTable m_table
+        +Calculator(istream&, ostream&)
+        +run() void
+        +processCommand(string) void
+        +static isValidIdentifier(string) bool
+        -handleVar(string) void
+        -handleLet(string) void
+        -handleFn(string) void
+        -handlePrint(string) void
+        -handlePrintVars() void
+        -handlePrintFns() void
+        -charToOp(char) OpType
+    }
+
+    class utils {
+        <<namespace>>
+        +isValidIdentifier(string) bool
+    }
+
+    Value ..> Calculator : используется
+    SymbolTable --> Value : хранит
+    SymbolTable --> FunctionDef : хранит
+    FunctionDef --> OpType : использует
+    Calculator --> SymbolTable : управляет
+    Calculator --> utils : использует
