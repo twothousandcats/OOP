@@ -1,25 +1,14 @@
 #pragma once
 #include <string>
+#include <sstream>
 
-namespace calc {
-inline bool isValidIdentifier(const std::string& name) {
-	if (name.empty()) {
-		return false;
-	}
+namespace calc
+{
 
-	// first symbol letter or under
-	if (const char first = name[0]; !std::isalpha(static_cast<unsigned char>(first)) && first != '_') {
-		return false;
-	}
+bool isValidIdentifier(const std::string& name);
 
-	for (size_t i = 1; i < name.length(); ++i) {
-		char c = name[i];
-		if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_') {
-			return false;
-		}
-	}
+std::string trim(const std::string& str);
 
-	return true;
-}
+bool checkExtraChars(std::istringstream& iss);
 
 } // namespace calc
