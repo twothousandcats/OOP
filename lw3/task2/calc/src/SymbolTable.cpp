@@ -5,55 +5,55 @@
 namespace calc
 {
 
-void SymbolTable::resetCache()
+void SymbolTable::ResetCache()
 {
 	m_functionCache.clear();
 }
 
-bool SymbolTable::declareVariable(const std::string& name)
+bool SymbolTable::DeclareVariable(const std::string& name)
 {
-	if (hasSymbol(name))
+	if (HasSymbol(name))
 	{
 		return false;
 	}
-	m_variables[name] = Value::nan();
-	resetCache();
+	m_variables[name] = Value::Nan();
+	ResetCache();
 	return true;
 }
 
-bool SymbolTable::hasSymbol(const std::string& name) const
+bool SymbolTable::HasSymbol(const std::string& name) const
 {
 	return m_variables.contains(name) || m_functions.contains(name);
 }
 
-bool SymbolTable::isVariable(const std::string& name) const
+bool SymbolTable::IsVariable(const std::string& name) const
 {
 	return m_variables.contains(name);
 }
 
-bool SymbolTable::isFunction(const std::string& name) const
+bool SymbolTable::IsFunction(const std::string& name) const
 {
 	return m_functions.contains(name);
 }
 
-void SymbolTable::setVariableValue(const std::string& name, const Value& val)
+void SymbolTable::SetVariableValue(const std::string& name, const Value& val)
 {
 	m_variables[name] = val;
-	resetCache();
+	ResetCache();
 }
 
-Value SymbolTable::getVariableValue(const std::string& name) const
+Value SymbolTable::GetVariableValue(const std::string& name) const
 {
 	if (const auto it = m_variables.find(name); it != m_variables.end())
 	{
 		return it->second;
 	}
-	return Value::nan();
+	return Value::Nan();
 }
 
-bool SymbolTable::declareFunction(const std::string& name, const FunctionDef& def)
+bool SymbolTable::DeclareFunction(const std::string& name, const FunctionDef& def)
 {
-	if (hasSymbol(name))
+	if (HasSymbol(name))
 	{
 		return false;
 	}
@@ -61,89 +61,86 @@ bool SymbolTable::declareFunction(const std::string& name, const FunctionDef& de
 	return true;
 }
 
-Value SymbolTable::evaluateFunction(const std::string& name)
+Value SymbolTable::EvaluateFunction(const std::string& name)
 {
-	// checking cache
 	if (const auto it = m_functionCache.find(name); it != m_functionCache.end())
 	{
 		return it->second;
 	}
 
-	// searching defined
 	const auto defIt = m_functions.find(name);
 	if (defIt == m_functions.end())
 	{
-		return Value::nan();
+		return Value::Nan();
 	}
 
 	const auto& [operand1, operand2, op] = defIt->second;
-	if (!hasSymbol(operand1))
+	if (!HasSymbol(operand1))
 	{
-		return Value::nan();
+		return Value::Nan();
 	}
 
-	const Value v1 = isFunction(operand1)
-		? evaluateFunction(operand1)
-		: getVariableValue(operand1);
+	const Value v1 = IsFunction(operand1)
+		? EvaluateFunction(operand1)
+		: GetVariableValue(operand1);
 
-	if (op == OpType::None)
+	if (op == OperationType::None)
 	{
 		m_functionCache[name] = v1;
 		return v1;
 	}
 
-	if (!hasSymbol(operand2))
+	if (!HasSymbol(operand2))
 	{
-		return Value::nan();
+		return Value::Nan();
 	}
 
-	const Value v2 = isFunction(operand2)
-		? evaluateFunction(operand2)
-		: getVariableValue(operand2);
+	const Value v2 = IsFunction(operand2)
+		? EvaluateFunction(operand2)
+		: GetVariableValue(operand2);
 
-	Value result = Value::nan();
+	Value result = Value::Nan();
 	switch (op)
 	{
-	case OpType::Add:
-		result = Value::add(v1, v2);
+	case OperationType::Add:
+		result = Value::Add(v1, v2);
 		break;
-	case OpType::Sub:
-		result = Value::sub(v1, v2);
+	case OperationType::Sub:
+		result = Value::Sub(v1, v2);
 		break;
-	case OpType::Mul:
-		result = Value::mul(v1, v2);
+	case OperationType::Mul:
+		result = Value::Mul(v1, v2);
 		break;
-	case OpType::Div:
-		result = Value::div(v1, v2);
+	case OperationType::Div:
+		result = Value::Div(v1, v2);
 		break;
 	default:
 		break;
 	}
 
 	m_functionCache[name] = result;
-
 	return result;
 }
 
-std::vector<std::string> SymbolTable::getSortedVariableNames() const
+std::vector<std::string> SymbolTable::GetSortedVariableNames() const
 {
 	std::vector<std::string> names;
+	names.reserve(m_variables.size());
 	for (const auto& name : m_variables | std::views::keys)
 	{
 		names.push_back(name);
 	}
-	std::ranges::sort(names);
 	return names;
 }
 
-std::vector<std::string> SymbolTable::getSortedFunctionNames() const
+std::vector<std::string> SymbolTable::GetSortedFunctionNames() const
 {
 	std::vector<std::string> names;
+	names.reserve(m_functions.size());
 	for (const auto& name : m_functions | std::views::keys)
 	{
 		names.push_back(name);
 	}
-	std::ranges::sort(names);
 	return names;
 }
 

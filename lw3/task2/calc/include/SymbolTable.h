@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <map>
 #include <vector>
@@ -7,8 +8,7 @@
 namespace calc
 {
 
-// operation type
-enum class OpType
+enum class OperationType
 {
 	None,
 	Add,
@@ -17,46 +17,46 @@ enum class OpType
 	Div
 };
 
-// func view
 struct FunctionDef
 {
 	std::string operand1;
-	std::string operand2; // optional cuz (assignment)
-	OpType op;
+	std::string operand2;
+	OperationType operation;
 };
 
 class SymbolTable
 {
 public:
-	bool declareVariable(const std::string& name);
+	using VariableMap = std::map<std::string, Value>;
+	using FunctionMap = std::map<std::string, FunctionDef>;
+	using CacheMap = std::map<std::string, Value>;
 
-	bool hasSymbol(const std::string& name) const;
+	bool DeclareVariable(const std::string& name);
 
-	bool isVariable(const std::string& name) const;
+	bool HasSymbol(const std::string& name) const;
 
-	bool isFunction(const std::string& name) const;
+	bool IsVariable(const std::string& name) const;
 
-	void setVariableValue(const std::string& name, const Value& val);
+	bool IsFunction(const std::string& name) const;
 
-	Value getVariableValue(const std::string& name) const;
+	void SetVariableValue(const std::string& name, const Value& val);
 
-	bool declareFunction(const std::string& name, const FunctionDef& def);
+	Value GetVariableValue(const std::string& name) const;
 
-	Value evaluateFunction(const std::string& name);
+	bool DeclareFunction(const std::string& name, const FunctionDef& def);
 
-	// list getters
-	std::vector<std::string> getSortedVariableNames() const;
+	Value EvaluateFunction(const std::string& name);
 
-	std::vector<std::string> getSortedFunctionNames() const;
+	std::vector<std::string> GetSortedVariableNames() const;
 
-	void resetCache();
+	std::vector<std::string> GetSortedFunctionNames() const;
+
+	void ResetCache();
 
 private:
-	// var/fn name as a key
-	std::map<std::string, Value> m_variables;
-	std::map<std::string, FunctionDef> m_functions;
-	std::map<std::string, Value> m_functionCache; // memo
-	// mutable std::map<std::string, Value> m_functionCache;
+	VariableMap m_variables;
+	FunctionMap m_functions;
+	CacheMap m_functionCache;
 };
 
 } // namespace calc

@@ -1,14 +1,13 @@
 #include "Calculator.h"
 #include "utils.h"
 #include <sstream>
-#include <vector>
 
 namespace calc
 {
 
-std::string Calculator::processCommand(const std::string& line)
+std::string Calculator::ProcessCommand(const std::string& line)
 {
-	std::string trimmedLine = calc::trim(line);
+	std::string trimmedLine = trim(line);
 	if (trimmedLine.empty())
 	{
 		return "";
@@ -20,176 +19,169 @@ std::string Calculator::processCommand(const std::string& line)
 
 	if (command == "var")
 	{
-		// init
 		std::string name;
-		if (!(iss >> name))
+		if (!(iss >> name) || checkExtraChars(iss))
 		{
 			return "Invalid usage\n";
 		}
+		return HandleVar(name);
+	}
 
-		if (calc::checkExtraChars(iss))
-		{
-			return "Invalid usage\n";
-		}
+	if (command == "let")
+	{
+		return HandleLet(trimmedLine);
+	}
 
-		return handleVar(name);
-	}
-	else if (command == "let")
+	if (command == "fn")
 	{
-		// change
-		return handleLet(trimmedLine);
+		return HandleFn(trimmedLine);
 	}
-	else if (command == "fn")
-	{
-		return handleFn(trimmedLine);
-	}
-	else if (command == "print")
+
+	if (command == "print")
 	{
 		std::string name;
-		if (!(iss >> name))
+		if (!(iss >> name) || checkExtraChars(iss))
 		{
 			return "Invalid usage\n";
 		}
-
-		if (calc::checkExtraChars(iss))
-		{
-			return "Invalid usage\n";
-		}
-
-		return handlePrint(name);
+		return HandlePrint(name);
 	}
-	else if (command == "printvars")
+
+	if (command == "printvars")
 	{
-		if (calc::checkExtraChars(iss))
+		if (checkExtraChars(iss))
 		{
 			return "Invalid usage\n";
 		}
-		return handlePrintVars();
+		return HandlePrintVars();
 	}
-	else if (command == "printfns")
+
+	if (command == "printfns")
 	{
-		if (calc::checkExtraChars(iss))
+		if (checkExtraChars(iss))
 		{
 			return "Invalid usage\n";
 		}
-		return handlePrintFns();
+		return HandlePrintFns();
 	}
 
 	return "Unknown command\n";
 }
 
-std::string Calculator::handleVar(const std::string& name)
+std::string Calculator::HandleVar(const std::string& name)
 {
-	if (!calc::isValidIdentifier(name))
+	if (!isValidIdentifier(name))
 	{
 		return "Invalid usage\n";
 	}
-	if (!m_table.declareVariable(name))
+	if (!m_table.DeclareVariable(name))
 	{
 		return "Name already exists\n";
 	}
-	return ""; // correct
+	return "";
 }
 
-std::string Calculator::handleLet(const std::string& line)
+std::string Calculator::HandleLet(const std::string& line)
 {
-	// let <identifier> = <value>
-	if (line.substr(0, 3) != "let")
+	// let <id> = <value|id>
+	constexpr std::string_view keyPrefix = "let";
+	if (line.substr(0, keyPrefix.size()) != keyPrefix)
 	{
 		return "Invalid usage\n";
 	}
 
-	std::string content = line.substr(3);
+	std::string content = line.substr(keyPrefix.size());
 	const auto eqPos = content.find('=');
 	if (eqPos == std::string::npos)
 	{
 		return "Invalid usage\n";
 	}
 
-	const std::string target = calc::trim(content.substr(0, eqPos)); // identifier
-	const std::string valuePart = calc::trim(content.substr(eqPos + 1)); // str after eq
+	const std::string target = trim(content.substr(0, eqPos));
+	const std::string valuePart = trim(content.substr(eqPos + 1));
 
-	if (!calc::isValidIdentifier(target))
+	if (!isValidIdentifier(target))
 	{
 		return "Invalid usage\n";
 	}
-	if (m_table.isFunction(target))
+	if (m_table.IsFunction(target))
 	{
 		return "Invalid usage\n";
 	}
 
-	// parse digit
-	char* endPtr;
+	// try to digit
+	char* endPtr = nullptr;
 	const double literal = std::strtod(valuePart.c_str(), &endPtr);
-	if (*endPtr == '\0' && endPtr != valuePart.c_str())
+	if (*endPtr == '\0' && endPtr != valuePart.c_str() && !valuePart.empty()) // is literal
 	{
-		if (!m_table.isVariable(target))
+		if (!m_table.IsVariable(target))
 		{
-			// if not exist -> create
-			m_table.declareVariable(target);
+			m_table.DeclareVariable(target);
 		}
-		m_table.setVariableValue(target, Value(literal)); // update v
+		m_table.SetVariableValue(target, Value(literal));
+		return "";
 	}
-	else
+
+	// identifier
+	if (!isValidIdentifier(valuePart))
 	{
-		if (!calc::isValidIdentifier(valuePart))
-		{
-			return "Invalid usage\n";
-		}
-		if (!m_table.hasSymbol(valuePart))
-		{
-			return "Name does not exist\n";
-		}
-
-		if (!m_table.isVariable(target))
-		{
-			m_table.declareVariable(target);
-		}
-
-		const Value val = m_table.isFunction(valuePart)
-			? m_table.evaluateFunction(valuePart)
-			: m_table.getVariableValue(valuePart);
-
-		m_table.setVariableValue(target, val);
+		return "Invalid usage\n";
 	}
+	if (!m_table.HasSymbol(valuePart))
+	{
+		return "Name does not exist\n";
+	}
+
+	if (!m_table.IsVariable(target))
+	{
+		m_table.DeclareVariable(target);
+	}
+
+	const Value val = m_table.IsFunction(valuePart)
+		? m_table.EvaluateFunction(valuePart)
+		: m_table.GetVariableValue(valuePart);
+
+	m_table.SetVariableValue(target, val);
 	return "";
 }
 
-std::string Calculator::handleFn(const std::string& line)
+std::string Calculator::HandleFn(const std::string& line)
 {
-	if (line.substr(0, 2) != "fn")
+	constexpr std::string_view kFnPrefix = "fn";
+	if (line.substr(0, kFnPrefix.size()) != kFnPrefix)
 	{
 		return "Invalid usage\n";
 	}
 
-	std::string content = line.substr(2);
-	auto eqPos = content.find('=');
+	std::string content = line.substr(kFnPrefix.size());
+	const auto eqPos = content.find('=');
 	if (eqPos == std::string::npos)
 	{
 		return "Invalid usage\n";
 	}
 
-	std::string target = calc::trim(content.substr(0, eqPos));
-	std::string expr = calc::trim(content.substr(eqPos + 1));
+	std::string target = trim(content.substr(0, eqPos));
+	std::string expr = trim(content.substr(eqPos + 1));
 
-	if (!calc::isValidIdentifier(target))
+	if (!isValidIdentifier(target))
 	{
 		return "Invalid usage\n";
 	}
-	if (m_table.hasSymbol(target))
+	if (m_table.HasSymbol(target))
 	{
 		return "Name already exists\n";
 	}
 
 	FunctionDef def;
-	def.op = OpType::None;
+	def.operation = OperationType::None;
 	size_t opPos = std::string::npos;
 	char opChar = 0;
 
-	// determine operator
+	// search operator
 	for (size_t i = 0; i < expr.length(); ++i)
 	{
-		if (char ch = expr[i]; ch == '+' || ch == '-' || ch == '*' || ch == '/')
+		const char ch = expr[i];
+		if (ch == '+' || ch == '-' || ch == '*' || ch == '/')
 		{
 			opPos = i;
 			opChar = ch;
@@ -199,111 +191,106 @@ std::string Calculator::handleFn(const std::string& line)
 
 	if (opPos != std::string::npos && opPos > 0 && opPos < expr.length() - 1)
 	{
-		std::string op1 = calc::trim(expr.substr(0, opPos));
-		std::string op2 = calc::trim(expr.substr(opPos + 1));
+		std::string op1 = trim(expr.substr(0, opPos));
+		std::string op2 = trim(expr.substr(opPos + 1));
 
 		if (op1.empty() || op2.empty())
 		{
 			return "Invalid usage\n";
 		}
-		if (!calc::isValidIdentifier(op1) || !calc::isValidIdentifier(op2))
+		if (!isValidIdentifier(op1) || !isValidIdentifier(op2))
 		{
 			return "Invalid usage\n";
 		}
-		if (!m_table.hasSymbol(op1) || !m_table.hasSymbol(op2))
+		if (!m_table.HasSymbol(op1) || !m_table.HasSymbol(op2))
 		{
 			return "Name does not exist\n";
 		}
 
-		def.operand1 = op1;
-		def.operand2 = op2;
-		def.op = charToOp(opChar);
+		def.operand1 = std::move(op1);
+		def.operand2 = std::move(op2);
+		def.operation = CharToOperation(opChar);
 	}
 	else
 	{
-
-		const std::string& op1 = expr;
-		if (op1.empty())
+		// fn x = y
+		if (expr.empty() || !isValidIdentifier(expr))
 		{
 			return "Invalid usage\n";
 		}
-		if (!calc::isValidIdentifier(op1))
-		{
-			return "Invalid usage\n";
-		}
-		if (!m_table.hasSymbol(op1))
+		if (!m_table.HasSymbol(expr))
 		{
 			return "Name does not exist\n";
 		}
 
-		def.operand1 = op1;
-		def.op = OpType::None;
+		def.operand1 = expr;
+		def.operation = OperationType::None;
 	}
 
-	m_table.declareFunction(target, def);
+	m_table.DeclareFunction(target, def);
 	return "";
 }
 
-std::string Calculator::handlePrint(const std::string& name)
+std::string Calculator::HandlePrint(const std::string& name)
 {
-	if (!calc::isValidIdentifier(name))
+	if (!isValidIdentifier(name))
 	{
 		return "Invalid usage\n";
 	}
-	if (!m_table.hasSymbol(name))
+	if (!m_table.HasSymbol(name))
 	{
 		return "Name does not exist\n";
 	}
 
-	const Value val = m_table.isFunction(name)
-		? m_table.evaluateFunction(name)
-		: m_table.getVariableValue(name);
+	const Value val = m_table.IsFunction(name)
+		? m_table.EvaluateFunction(name)
+		: m_table.GetVariableValue(name);
 
 	std::ostringstream oss;
-	val.print(oss);
+	val.Print(oss);
 	return oss.str() + "\n";
 }
 
-std::string Calculator::handlePrintVars()
+std::string Calculator::HandlePrintVars()
 {
 	std::ostringstream oss;
-	auto names = m_table.getSortedVariableNames();
+	const auto names = m_table.GetSortedVariableNames();
 	for (const auto& name : names)
 	{
 		oss << name << ":";
-		m_table.getVariableValue(name).print(oss);
+		m_table.GetVariableValue(name).Print(oss);
 		oss << "\n";
 	}
 	return oss.str();
 }
 
-std::string Calculator::handlePrintFns()
+std::string Calculator::HandlePrintFns()
 {
 	std::ostringstream oss;
-	auto names = m_table.getSortedFunctionNames();
+	const auto names = m_table.GetSortedFunctionNames();
 	for (const auto& name : names)
 	{
 		oss << name << ":";
-		m_table.evaluateFunction(name).print(oss);
+		m_table.EvaluateFunction(name).Print(oss);
 		oss << "\n";
 	}
 	return oss.str();
 }
 
-OpType Calculator::charToOp(char c)
+OperationType Calculator::CharToOperation(const char ch)
 {
-	switch (c)
+	switch (ch)
 	{
 	case '+':
-		return OpType::Add;
+		return OperationType::Add;
 	case '-':
-		return OpType::Sub;
+		return OperationType::Sub;
 	case '*':
-		return OpType::Mul;
+		return OperationType::Mul;
 	case '/':
-		return OpType::Div;
+		return OperationType::Div;
 	default:
-		return OpType::None;
+		return OperationType::None;
 	}
 }
 

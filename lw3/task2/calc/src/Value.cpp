@@ -1,4 +1,5 @@
 #include "Value.h"
+#include <iomanip>
 
 namespace calc
 {
@@ -8,29 +9,29 @@ Value::Value()
 {
 }
 
-Value::Value(const double val)
+Value::Value(double val)
 	: m_data(val)
 {
 }
 
-Value Value::nan()
+Value Value::Nan()
 {
 	return Value(std::numeric_limits<double>::quiet_NaN());
 }
 
-bool Value::isDefined() const
+bool Value::IsDefined() const
 {
 	return !std::isnan(m_data);
 }
 
-double Value::get() const
+double Value::Get() const
 {
 	return m_data;
 }
 
-void Value::print(std::ostream& os) const
+void Value::Print(std::ostream& os) const
 {
-	if (isDefined())
+	if (IsDefined())
 	{
 		os << std::fixed << std::setprecision(2) << m_data;
 	}
@@ -40,46 +41,46 @@ void Value::print(std::ostream& os) const
 	}
 }
 
-Value Value::add(const Value& lhs, const Value& rhs)
+Value Value::Add(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.isDefined() || !rhs.isDefined())
+	if (!lhs.IsDefined() || !rhs.IsDefined())
 	{
-		return nan();
+		return Nan();
 	}
-	return Value(lhs.get() + rhs.get());
+	return Value(lhs.Get() + rhs.Get());
 }
 
-Value Value::sub(const Value& lhs, const Value& rhs)
+Value Value::Sub(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.isDefined() || !rhs.isDefined())
+	if (!lhs.IsDefined() || !rhs.IsDefined())
 	{
-		return nan();
+		return Nan();
 	}
-	return Value(lhs.get() - rhs.get());
+	return Value(lhs.Get() - rhs.Get());
 }
 
-Value Value::mul(const Value& lhs, const Value& rhs)
+Value Value::Mul(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.isDefined() || !rhs.isDefined())
+	if (!lhs.IsDefined() || !rhs.IsDefined())
 	{
-		return nan();
+		return Nan();
 	}
-	return Value(lhs.get() * rhs.get());
+	return Value(lhs.Get() * rhs.Get());
 }
 
-Value Value::div(const Value& lhs, const Value& rhs)
+Value Value::Div(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.isDefined() || !rhs.isDefined())
+	if (!lhs.IsDefined() || !rhs.IsDefined())
 	{
-		return nan();
+		return Nan();
 	}
 
-	if (rhs.get() == 0.0)
+	if (rhs.Get() == 0.0)
 	{
-		return nan();
+		return Nan();
 	}
 
-	return Value(lhs.get() / rhs.get());
+	return Value(lhs.Get() / rhs.Get());
 }
 
 } // namespace calc

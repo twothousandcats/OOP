@@ -1,6 +1,6 @@
 #pragma once
 
-#include <iomanip>
+#include <ostream>
 
 namespace calc
 {
@@ -12,21 +12,21 @@ public:
 
 	explicit Value(double val);
 
-	static Value nan();
+	static Value Nan();
 
-	bool isDefined() const;
+	bool IsDefined() const;
 
-	double get() const;
+	double Get() const;
 
-	void print(std::ostream& os) const;
+	void Print(std::ostream& os) const;
 
-	static Value add(const Value& lhs, const Value& rhs);
+	static Value Add(const Value& lhs, const Value& rhs);
 
-	static Value sub(const Value& lhs, const Value& rhs);
+	static Value Sub(const Value& lhs, const Value& rhs);
 
-	static Value mul(const Value& lhs, const Value& rhs);
+	static Value Mul(const Value& lhs, const Value& rhs);
 
-	static Value div(const Value& lhs, const Value& rhs);
+	static Value Div(const Value& lhs, const Value& rhs);
 
 private:
 	double m_data;

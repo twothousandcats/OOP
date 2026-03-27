@@ -9,7 +9,7 @@ int main()
 
 	while (std::getline(std::cin, line))
 	{
-		if (std::string result = calculator.processCommand(line); !result.empty())
+		if (std::string result = calculator.ProcessCommand(line); !result.empty())
 		{
 			std::cout << result;
 		}
