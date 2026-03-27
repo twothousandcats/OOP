@@ -7,9 +7,6 @@
 #include <iostream>
 #include <string>
 
-// Helper
-bool isNaN(const double v) { return std::isnan(v); }
-
 TEST_CASE("Value handles defined and undefined states", "[Value]")
 {
 	const calc::Value v1(10.5);
@@ -102,11 +99,9 @@ TEST_CASE("Command: Fibonacci 50th number with lazy recalculation", "[Integratio
 {
 	calc::Calculator calc;
 
-	// base
+	// init base
 	REQUIRE(calc.processCommand("let v0=0").empty());
 	REQUIRE(calc.processCommand("let v1=1").empty());
-
-	// init
 	REQUIRE(calc.processCommand("fn fib0=v0").empty());
 	REQUIRE(calc.processCommand("fn fib1=v1").empty());
 
