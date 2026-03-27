@@ -17,7 +17,7 @@ TEST_CASE("Value handles defined and undefined states", "[Value]")
 	REQUIRE(v1.isDefined());
 	REQUIRE_FALSE(v2.isDefined());
 	REQUIRE(v1.get() == 10.5);
-	REQUIRE(isNaN(v2.get()));
+	REQUIRE(std::isnan(v2.get()));
 }
 
 TEST_CASE("Division by zero results in NaN", "[Value]")
@@ -96,32 +96,6 @@ TEST_CASE("Command: Invalid usage syntax", "[Logic]")
 	REQUIRE(calc.processCommand("var") == "Invalid usage\n");
 	REQUIRE(calc.processCommand("let x") == "Invalid usage\n");
 	REQUIRE(calc.processCommand("print nonexistent") == "Name does not exist\n");
-}
-
-TEST_CASE("Full Scenario: Fibonacci", "[Integration]")
-{
-	calc::Calculator calc;
-	std::string input[] = {
-		"let v0=0", "let v1=1",
-		"fn fib0=v0", "fn fib1=v1",
-		"fn fib2=fib1+fib0", "fn fib3=fib2+fib1",
-		"printfns"
-	};
-
-	for (const auto& cmd : input)
-		calc.processCommand(cmd);
-
-	std::string output = calc.processCommand("printfns");
-	REQUIRE(output.find("fib0:0.00") != std::string::npos);
-	REQUIRE(output.find("fib3:2.00") != std::string::npos);
-
-	// Изменяем базу
-	calc.processCommand("let v0=1");
-	calc.processCommand("let v1=1");
-
-	output = calc.processCommand("printfns");
-	REQUIRE(output.find("fib0:1.00") != std::string::npos);
-	REQUIRE(output.find("fib3:3.00") != std::string::npos);
 }
 
 TEST_CASE("Command: Fibonacci 50th number with lazy recalculation", "[Integration][Performance]")

@@ -5,6 +5,11 @@
 namespace calc
 {
 
+void SymbolTable::resetCache()
+{
+	m_functionCache.clear();
+}
+
 bool SymbolTable::declareVariable(const std::string& name)
 {
 	if (hasSymbol(name))
@@ -12,6 +17,7 @@ bool SymbolTable::declareVariable(const std::string& name)
 		return false;
 	}
 	m_variables[name] = Value::nan();
+	resetCache();
 	return true;
 }
 
@@ -33,6 +39,7 @@ bool SymbolTable::isFunction(const std::string& name) const
 void SymbolTable::setVariableValue(const std::string& name, const Value& val)
 {
 	m_variables[name] = val;
+	resetCache();
 }
 
 Value SymbolTable::getVariableValue(const std::string& name) const
@@ -54,15 +61,22 @@ bool SymbolTable::declareFunction(const std::string& name, const FunctionDef& de
 	return true;
 }
 
-Value SymbolTable::evaluateFunction(const std::string& name) const
+Value SymbolTable::evaluateFunction(const std::string& name)
 {
-	const auto it = m_functions.find(name);
-	if (it == m_functions.end())
+	// checking cache
+	if (const auto it = m_functionCache.find(name); it != m_functionCache.end())
+	{
+		return it->second;
+	}
+
+	// searching defined
+	const auto defIt = m_functions.find(name);
+	if (defIt == m_functions.end())
 	{
 		return Value::nan();
 	}
 
-	const auto& [operand1, operand2, op] = it->second;
+	const auto& [operand1, operand2, op] = defIt->second;
 	if (!hasSymbol(operand1))
 	{
 		return Value::nan();
@@ -71,33 +85,44 @@ Value SymbolTable::evaluateFunction(const std::string& name) const
 	const Value v1 = isFunction(operand1)
 		? evaluateFunction(operand1)
 		: getVariableValue(operand1);
+
 	if (op == OpType::None)
 	{
+		m_functionCache[name] = v1;
 		return v1;
 	}
 
-	// binary
 	if (!hasSymbol(operand2))
 	{
 		return Value::nan();
 	}
+
 	const Value v2 = isFunction(operand2)
 		? evaluateFunction(operand2)
 		: getVariableValue(operand2);
 
+	Value result = Value::nan();
 	switch (op)
 	{
 	case OpType::Add:
-		return Value::add(v1, v2);
+		result = Value::add(v1, v2);
+		break;
 	case OpType::Sub:
-		return Value::sub(v1, v2);
+		result = Value::sub(v1, v2);
+		break;
 	case OpType::Mul:
-		return Value::mul(v1, v2);
+		result = Value::mul(v1, v2);
+		break;
 	case OpType::Div:
-		return Value::div(v1, v2);
+		result = Value::div(v1, v2);
+		break;
 	default:
-		return Value::nan();
+		break;
 	}
+
+	m_functionCache[name] = result;
+
+	return result;
 }
 
 std::vector<std::string> SymbolTable::getSortedVariableNames() const

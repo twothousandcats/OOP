@@ -13,14 +13,13 @@ public:
 private:
 	SymbolTable m_table;
 
-
 	std::string handleVar(const std::string& name);
 
 	std::string handleLet(const std::string& line);
 
 	std::string handleFn(const std::string& line);
 
-	std::string handlePrint(const std::string& name) const;
+	std::string handlePrint(const std::string& name);
 
 	std::string handlePrintVars();
 

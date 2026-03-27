@@ -244,7 +244,7 @@ std::string Calculator::handleFn(const std::string& line)
 	return "";
 }
 
-std::string Calculator::handlePrint(const std::string& name) const
+std::string Calculator::handlePrint(const std::string& name)
 {
 	if (!calc::isValidIdentifier(name))
 	{
