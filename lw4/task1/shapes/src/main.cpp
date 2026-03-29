@@ -17,7 +17,7 @@
 
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
-constexpr sf::Vector2u WINDOW_SIZE = {WINDOW_WIDTH, WINDOW_HEIGHT};
+constexpr sf::Vector2u WINDOW_SIZE = { WINDOW_WIDTH, WINDOW_HEIGHT };
 constexpr std::string WINDOW_TITLE = "Shapes";
 
 std::unique_ptr<IShape> ParseShape(const std::string& line)

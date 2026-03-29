@@ -2,7 +2,8 @@
 
 class ICanvas;
 
-class ICanvasDrawable {
+class ICanvasDrawable
+{
 public:
 	virtual ~ICanvasDrawable() = default;
 
