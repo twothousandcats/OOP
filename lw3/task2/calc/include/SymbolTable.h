@@ -4,6 +4,8 @@
 #include <map>
 #include <vector>
 #include "Value.h"
+#include <unordered_set>
+#include <unordered_map>
 
 namespace calc
 {
@@ -22,14 +24,16 @@ struct FunctionDef
 	std::string operand1;
 	std::string operand2;
 	OperationType operation;
+	std::optional<Value> cache;
 };
 
 class SymbolTable
 {
 public:
-	using VariableMap = std::map<std::string, Value>;
-	using FunctionMap = std::map<std::string, FunctionDef>;
-	using CacheMap = std::map<std::string, Value>;
+	// todo: оптимизировать через поиск используемого
+	using VariableMap = std::unordered_map<std::string, Value>;
+	using FunctionMap = std::unordered_map<std::string, FunctionDef>;
+	using DependencyGraph = std::unordered_map<std::string, std::unordered_set<std::string> >;
 
 	bool DeclareVariable(const std::string& name);
 
@@ -51,12 +55,15 @@ public:
 
 	std::vector<std::string> GetSortedFunctionNames() const;
 
-	void ResetCache();
-
 private:
+	void InvalidateDependentCaches(const std::string& sourceName);
+
+	void RegisterDependencies(const std::string& funcName, const FunctionDef& def);
+
+
 	VariableMap m_variables;
 	FunctionMap m_functions;
-	CacheMap m_functionCache;
+	DependencyGraph m_reverseDeps;
 };
 
 } // namespace calc

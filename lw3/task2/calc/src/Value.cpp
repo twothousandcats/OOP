@@ -19,7 +19,7 @@ Value Value::Nan()
 	return Value(std::numeric_limits<double>::quiet_NaN());
 }
 
-bool Value::IsDefined() const
+bool Value::IsNan() const
 {
 	return !std::isnan(m_data);
 }
@@ -31,7 +31,7 @@ double Value::Get() const
 
 void Value::Print(std::ostream& os) const
 {
-	if (IsDefined())
+	if (IsNan())
 	{
 		os << std::fixed << std::setprecision(2) << m_data;
 	}
@@ -43,7 +43,7 @@ void Value::Print(std::ostream& os) const
 
 Value Value::Add(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.IsDefined() || !rhs.IsDefined())
+	if (!lhs.IsNan() || !rhs.IsNan())
 	{
 		return Nan();
 	}
@@ -52,7 +52,7 @@ Value Value::Add(const Value& lhs, const Value& rhs)
 
 Value Value::Sub(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.IsDefined() || !rhs.IsDefined())
+	if (!lhs.IsNan() || !rhs.IsNan())
 	{
 		return Nan();
 	}
@@ -61,7 +61,7 @@ Value Value::Sub(const Value& lhs, const Value& rhs)
 
 Value Value::Mul(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.IsDefined() || !rhs.IsDefined())
+	if (!lhs.IsNan() || !rhs.IsNan())
 	{
 		return Nan();
 	}
@@ -70,7 +70,7 @@ Value Value::Mul(const Value& lhs, const Value& rhs)
 
 Value Value::Div(const Value& lhs, const Value& rhs)
 {
-	if (!lhs.IsDefined() || !rhs.IsDefined())
+	if (!lhs.IsNan() || !rhs.IsNan())
 	{
 		return Nan();
 	}

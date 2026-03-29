@@ -171,7 +171,6 @@ int main()
 		Car car;
 		std::string line;
 
-		// вынес основной цикл в функцию ProcessCommand
 		while (std::getline(std::cin, line))
 		{
 			ProcessCommand(car, line);

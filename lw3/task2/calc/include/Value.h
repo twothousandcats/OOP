@@ -14,12 +14,13 @@ public:
 
 	static Value Nan();
 
-	bool IsDefined() const;
+	bool IsNan() const;
 
 	double Get() const;
 
 	void Print(std::ostream& os) const;
 
+	// исключить статик -> no invariant
 	static Value Add(const Value& lhs, const Value& rhs);
 
 	static Value Sub(const Value& lhs, const Value& rhs);

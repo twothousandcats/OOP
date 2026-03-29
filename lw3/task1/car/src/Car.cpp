@@ -106,6 +106,7 @@ bool Car::SetSpeed(const int speed)
 	m_speed = speed;
 
 	// inertia accounting
+	// todo: определять инерцию в одном месте
 	if (m_speed > 0)
 	{
 		if (m_gear == -1)

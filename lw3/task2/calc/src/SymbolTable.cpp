@@ -1,13 +1,44 @@
 #include "SymbolTable.h"
-#include <algorithm>
 #include <ranges>
 
 namespace calc
 {
 
-void SymbolTable::ResetCache()
+void SymbolTable::RegisterDependencies(const std::string& funcName, const FunctionDef& def)
 {
-	m_functionCache.clear();
+	m_reverseDeps[def.operand1].insert(funcName);
+	if (def.operation != OperationType::None)
+	{
+		m_reverseDeps[def.operand2].insert(funcName);
+	}
+}
+
+// iterative via queue for dependent fns
+void SymbolTable::InvalidateDependentCaches(const std::string& sourceName)
+{
+	std::queue<std::string> queue;
+	queue.push(sourceName);
+	std::unordered_set<std::string> visited;
+	visited.insert(sourceName);
+	while (!queue.empty())
+	{
+		const std::string current = queue.front();
+		queue.pop();
+		if (auto it = m_reverseDeps.find(current); it != m_reverseDeps.end())
+		{
+			for (const auto& dependentFuncName : it->second)
+			{
+				if (auto funcIt = m_functions.find(dependentFuncName); funcIt != m_functions.end())
+				{
+					funcIt->second.cache.reset();
+					if (visited.insert(dependentFuncName).second)
+					{
+						queue.push(dependentFuncName);
+					}
+				}
+			}
+		}
+	}
 }
 
 bool SymbolTable::DeclareVariable(const std::string& name)
@@ -17,7 +48,6 @@ bool SymbolTable::DeclareVariable(const std::string& name)
 		return false;
 	}
 	m_variables[name] = Value::Nan();
-	ResetCache();
 	return true;
 }
 
@@ -38,8 +68,13 @@ bool SymbolTable::IsFunction(const std::string& name) const
 
 void SymbolTable::SetVariableValue(const std::string& name, const Value& val)
 {
+	if (!m_variables.contains(name))
+	{
+		return;
+	}
+
 	m_variables[name] = val;
-	ResetCache();
+	InvalidateDependentCaches(name);
 }
 
 Value SymbolTable::GetVariableValue(const std::string& name) const
@@ -58,23 +93,28 @@ bool SymbolTable::DeclareFunction(const std::string& name, const FunctionDef& de
 		return false;
 	}
 	m_functions[name] = def;
+	RegisterDependencies(name, def);
 	return true;
 }
 
 Value SymbolTable::EvaluateFunction(const std::string& name)
 {
-	if (const auto it = m_functionCache.find(name); it != m_functionCache.end())
-	{
-		return it->second;
-	}
-
-	const auto defIt = m_functions.find(name);
-	if (defIt == m_functions.end())
+	const auto it = m_functions.find(name);
+	if (it == m_functions.end())
 	{
 		return Value::Nan();
 	}
 
-	const auto& [operand1, operand2, op] = defIt->second;
+	FunctionDef& def = it->second;
+
+	auto& [operand1, operand2, op, cache] = def;
+
+	// checking cache
+	if (cache.has_value())
+	{
+		return cache.value();
+	}
+
 	if (!HasSymbol(operand1))
 	{
 		return Value::Nan();
@@ -86,7 +126,7 @@ Value SymbolTable::EvaluateFunction(const std::string& name)
 
 	if (op == OperationType::None)
 	{
-		m_functionCache[name] = v1;
+		cache = v1;
 		return v1;
 	}
 
@@ -118,7 +158,7 @@ Value SymbolTable::EvaluateFunction(const std::string& name)
 		break;
 	}
 
-	m_functionCache[name] = result;
+	cache = result;
 	return result;
 }
 

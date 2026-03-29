@@ -12,8 +12,8 @@ TEST_CASE("Value handles defined and undefined states", "[Value]")
 {
 	const calc::Value v1(10.5);
 	const calc::Value v2 = calc::Value::Nan();
-	REQUIRE(v1.IsDefined());
-	REQUIRE_FALSE(v2.IsDefined());
+	REQUIRE(v1.IsNan());
+	REQUIRE_FALSE(v2.IsNan());
 	REQUIRE(v1.Get() == 10.5);
 	REQUIRE(std::isnan(v2.Get()));
 }
@@ -22,7 +22,7 @@ TEST_CASE("Division by zero results in NaN", "[Value]")
 {
 	const calc::Value a(10.0);
 	const calc::Value b(0.0);
-	REQUIRE_FALSE(calc::Value::Div(a, b).IsDefined());
+	REQUIRE_FALSE(calc::Value::Div(a, b).IsNan());
 }
 
 TEST_CASE("Identifier validation", "[Utils]")

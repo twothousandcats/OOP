@@ -1,6 +1,4 @@
 #pragma once
-// todo: backward > neutral > 1gear > направление стало forward (неправильно)
- // не использовать nodisc просто так
 enum class Direction
 {
 	StandingStill,
@@ -30,11 +28,10 @@ public:
 	int GetGear() const;
 
 private:
-	// перенес константы в реализацию
 	bool m_engineOn{ false };
 	int m_gear{ 0 }; // -1 to 5
 	int m_speed{ 0 }; // non-negative
-	Direction m_lastDirection{ Direction::StandingStill };
+	Direction m_lastDirection{ Direction::StandingStill }; // todo; rename smth like "inertia"
 
 	struct GearRange
 	{
