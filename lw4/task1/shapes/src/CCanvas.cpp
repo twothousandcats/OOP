@@ -29,7 +29,7 @@ void CCanvas::DrawLine(const CPoint& from, const CPoint& to, uint32_t lineColor)
 		sf::Vertex(sf::Vector2f(static_cast<float>(from.x), static_cast<float>(from.y)), ToSfColor(lineColor)),
 		sf::Vertex(sf::Vector2f(static_cast<float>(to.x), static_cast<float>(to.y)), ToSfColor(lineColor))
 	};
-	m_window.draw(line, 2, sf::Lines);
+	m_window.draw(line, 2, sf::PrimitiveType::Lines);
 }
 
 void CCanvas::FillPolygon(const std::vector<CPoint>& points, uint32_t fillColor)

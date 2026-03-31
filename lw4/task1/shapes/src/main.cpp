@@ -15,8 +15,8 @@
 #include "CCircle.h"
 #include <SFML/Graphics.hpp>
 
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
+constexpr int WINDOW_WIDTH = 1200;
+constexpr int WINDOW_HEIGHT = 800;
 constexpr sf::Vector2u WINDOW_SIZE = { WINDOW_WIDTH, WINDOW_HEIGHT };
 constexpr std::string WINDOW_TITLE = "Shapes";
 
@@ -119,6 +119,17 @@ int main()
 				window.close();
 			}
 		}
+
+		window.clear(sf::Color::White);
+		for (const auto& shape : shapes)
+		{
+			if (const auto* drawable = dynamic_cast<const ICanvasDrawable*>(shape.get()))
+			{
+				drawable->Draw(canvas);
+			}
+		}
+
+		window.display();
 	}
 
 	return 0;
