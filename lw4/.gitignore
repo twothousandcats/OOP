@@ -1,4 +1,47 @@
-.idea/
+build/
+cmake-build-*/
+CMakeFiles/
 cmake-build-debug
-CMakeLists.txt
-task1/shapes/include/fakeit/fakeit.h
+conanbuildinfo.txt
+*.so
+*.dylib
+*.dll
+*.exe
+*.o
+*.obj
+*.a
+*.lib
+
+# Dependencies
+.externalNativeBuild/
+.gradle/
+node_modules/
+vendor/
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Environment
+.env
+.env.local
+.env.*
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Testing
+*.gcda
+*.gcno
