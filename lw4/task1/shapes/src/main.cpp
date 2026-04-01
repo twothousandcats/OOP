@@ -60,6 +60,10 @@ std::unique_ptr<IShape> ParseShape(const std::string& line)
 
 int main()
 {
+	// auto remove from heap
+	// защита от копирования
+	// Нельзя создать вектор объектов абстрактного класса
+	// shared_ptr допускает совместное владение
 	std::vector<std::unique_ptr<IShape> > shapes;
 	std::string line;
 
@@ -67,6 +71,9 @@ int main()
 	{
 		if (auto shape = ParseShape(line))
 		{
+			// unique_ptr
+			// cant copied, cant be moved push_back by value
+			// so std::move
 			shapes.push_back(std::move(shape));
 		}
 	}
