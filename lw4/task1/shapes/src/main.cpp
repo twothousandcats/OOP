@@ -92,6 +92,7 @@ std::vector<std::unique_ptr<IShape> > ReadShapesFromInput()
 	return shapes;
 }
 
+// polymorph
 void PrintShapeInfo(const IShape& shape)
 {
 	std::cout << std::fixed << std::setprecision(2);
@@ -99,6 +100,9 @@ void PrintShapeInfo(const IShape& shape)
 	std::cout << "Perimeter: " << shape.GetPerimeter() << "\n";
 	std::cout << "Outline Color: #" << std::hex << shape.GetOutlineColor() << std::dec << "\n";
 
+	// ISolidShape? ->
+	// cast returns valid pointer -> fill color,
+	// if not -> nullptr
 	if (const auto* solid = dynamic_cast<const ISolidShape*>(&shape))
 	{
 		std::cout << "Fill Color: #" << std::hex << solid->GetFillColor() << std::dec << "\n";
@@ -121,7 +125,7 @@ void AnalyzeAndPrintStats(const std::vector<std::unique_ptr<IShape> >& shapes)
 		[](const auto& a, const auto& b) { return a->GetPerimeter() < b->GetPerimeter(); });
 
 	std::cout << "Shape with largest area:\n";
-	PrintShapeInfo(**maxAreaIt);
+	PrintShapeInfo(**maxAreaIt); // 1) unique<IShape> 2) IShape
 	std::cout << "\n";
 
 	std::cout << "Shape with smallest perimeter:\n";

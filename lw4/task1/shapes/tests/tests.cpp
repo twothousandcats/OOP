@@ -7,16 +7,19 @@
 #include "CCircle.h"
 #include "CLineSegment.h"
 #include "MockCanvas.h"
-#include <cmath> // for std::hypot if not included elsewhere
+#include <cmath>
 
 using namespace Catch::Matchers;
 using namespace fakeit;
 
 // Helper matcher for points to keep tests concise
-static bool PointsEqual(const CPoint& a, const CPoint& b, double epsilon = 0.0001) {
-    return std::abs(a.x - b.x) < epsilon && std::abs(a.y - b.y) < epsilon;
+static bool PointsEqual(const CPoint& a, const CPoint& b, const double epsilon = 0.0001)
+{
+	return std::abs(a.x - b.x) < epsilon
+		&& std::abs(a.y - b.y) < epsilon;
 }
 
+// Arrange-Act-Assert
 TEST_CASE("Rectangle calculates area and perimeter correctly", "[geometry][rectangle]")
 {
 	CPoint topLeft{ 10.0, 20.0 };
@@ -48,18 +51,44 @@ TEST_CASE("Rectangle calculates area and perimeter correctly", "[geometry][recta
 	}
 }
 
+TEST_CASE("Circle calculates area and perimeter correctly", "[geometry][circle]")
+{
+	constexpr CPoint center{ 0, 0 };
+	constexpr double radius = 5.0;
+	constexpr double expectedArea = 3.14159265358979323846 * radius * radius;
+	constexpr double expectedPerimeter = 2 * 3.14159265358979323846 * radius;
+
+	const CCircle circle(center, radius, 0x000000, 0xFFFFFF);
+
+	REQUIRE_THAT(circle.GetArea(), WithinAbs(expectedArea, 0.01));
+	REQUIRE_THAT(circle.GetPerimeter(), WithinAbs(expectedPerimeter, 0.01));
+}
+
+TEST_CASE("LineSegment has zero area and correct length", "[geometry][line]")
+{
+	CPoint start{ 0, 0 };
+	CPoint end{ 10, 10 };
+	uint32_t color = 0xFF0000;
+
+	CLineSegment line(start, end, color);
+
+	REQUIRE(line.GetArea() == 0.0);
+
+	double expectedLength = std::hypot(end.x - start.x, end.y - start.y);
+	REQUIRE_THAT(line.GetPerimeter(), WithinAbs(expectedLength, 0.001));
+}
+
 TEST_CASE("Rectangle Draw method calls canvas correctly", "[draw][rectangle]")
 {
 	MockCanvas mockCanvas;
 	std::vector<CPoint> capturedPoints;
 	uint32_t capturedFillColor = 0;
-	std::vector<std::tuple<CPoint, CPoint, uint32_t>> capturedLines;
+	std::vector<std::tuple<CPoint, CPoint, uint32_t> > capturedLines;
 
 	When(Method(mockCanvas, FillPolygon)).AlwaysDo([&capturedPoints, &capturedFillColor](const std::vector<CPoint>& points, uint32_t color) {
 		capturedPoints = points;
 		capturedFillColor = color;
 	});
-
 	When(Method(mockCanvas, DrawLine)).AlwaysDo([&capturedLines](const CPoint& from, const CPoint& to, uint32_t color) {
 		capturedLines.emplace_back(from, to, color);
 	});
@@ -80,36 +109,35 @@ TEST_CASE("Rectangle Draw method calls canvas correctly", "[draw][rectangle]")
 	REQUIRE(capturedFillColor == fillColor);
 
 	// Define expected corners
-	CPoint p1 = leftTop; // Top-Left
-	CPoint p2{ leftTop.x + width, leftTop.y }; // Top-Right
-	CPoint p3{ leftTop.x + width, leftTop.y + height }; // Bottom-Right
-	CPoint p4{ leftTop.x, leftTop.y + height }; // Bottom-Left
+	CPoint topLeft = leftTop;
+	CPoint topRight{ leftTop.x + width, leftTop.y };
+	CPoint botRight{ leftTop.x + width, leftTop.y + height };
+	CPoint botLeft{ leftTop.x, leftTop.y + height };
 
-	// Check polygon points order (assuming clockwise or counter-clockwise consistency)
-	REQUIRE(PointsEqual(capturedPoints[0], p1));
-	REQUIRE(PointsEqual(capturedPoints[1], p2));
-	REQUIRE(PointsEqual(capturedPoints[2], p3));
-	REQUIRE(PointsEqual(capturedPoints[3], p4));
+	// Check polygon points order
+	REQUIRE(PointsEqual(capturedPoints[0], topLeft));
+	REQUIRE(PointsEqual(capturedPoints[1], topRight));
+	REQUIRE(PointsEqual(capturedPoints[2], botRight));
+	REQUIRE(PointsEqual(capturedPoints[3], botLeft));
 
 	// Check lines coordinates and colors
 	REQUIRE(capturedLines.size() == 4);
 
-	// Expected lines: P1->P2, P2->P3, P3->P4, P4->P1
-	// Note: Adjust order if your implementation draws differently, but it must be consistent
-	REQUIRE(PointsEqual(std::get<0>(capturedLines[0]), p1));
-	REQUIRE(PointsEqual(std::get<1>(capturedLines[0]), p2));
+	// std::get<N> to access tuple elements
+	REQUIRE(PointsEqual(std::get<0>(capturedLines[0]), topLeft));
+	REQUIRE(PointsEqual(std::get<1>(capturedLines[0]), topRight));
 	REQUIRE(std::get<2>(capturedLines[0]) == outlineColor);
 
-	REQUIRE(PointsEqual(std::get<0>(capturedLines[1]), p2));
-	REQUIRE(PointsEqual(std::get<1>(capturedLines[1]), p3));
+	REQUIRE(PointsEqual(std::get<0>(capturedLines[1]), topRight));
+	REQUIRE(PointsEqual(std::get<1>(capturedLines[1]), botRight));
 	REQUIRE(std::get<2>(capturedLines[1]) == outlineColor);
 
-	REQUIRE(PointsEqual(std::get<0>(capturedLines[2]), p3));
-	REQUIRE(PointsEqual(std::get<1>(capturedLines[2]), p4));
+	REQUIRE(PointsEqual(std::get<0>(capturedLines[2]), botRight));
+	REQUIRE(PointsEqual(std::get<1>(capturedLines[2]), botLeft));
 	REQUIRE(std::get<2>(capturedLines[2]) == outlineColor);
 
-	REQUIRE(PointsEqual(std::get<0>(capturedLines[3]), p4));
-	REQUIRE(PointsEqual(std::get<1>(capturedLines[3]), p1));
+	REQUIRE(PointsEqual(std::get<0>(capturedLines[3]), botLeft));
+	REQUIRE(PointsEqual(std::get<1>(capturedLines[3]), topLeft));
 	REQUIRE(std::get<2>(capturedLines[3]) == outlineColor);
 }
 
@@ -118,7 +146,7 @@ TEST_CASE("Triangle draws itself correctly on canvas", "[drawing][triangle]")
 	MockCanvas mockCanvas;
 	std::vector<CPoint> capturedPoints;
 	uint32_t capturedColor = 0;
-	std::vector<std::tuple<CPoint, CPoint, uint32_t>> capturedLines;
+	std::vector<std::tuple<CPoint, CPoint, uint32_t> > capturedLines;
 
 	When(Method(mockCanvas, FillPolygon)).AlwaysDo([&capturedPoints, &capturedColor](const std::vector<CPoint>& points, uint32_t color) {
 		capturedPoints = points;
@@ -207,54 +235,27 @@ TEST_CASE("Circle draws itself correctly on canvas", "[draw][circle]")
 	REQUIRE(capturedOutlineColor == outlineColor);
 }
 
-TEST_CASE("Circle calculates area and perimeter correctly", "[geometry][circle]")
-{
-	constexpr CPoint center{ 0, 0 };
-	constexpr double radius = 5.0;
-	constexpr double expectedArea = 3.14159265358979323846 * radius * radius;
-	constexpr double expectedPerimeter = 2 * 3.14159265358979323846 * radius;
-
-	const CCircle circle(center, radius, 0x000000, 0xFFFFFF);
-
-	REQUIRE_THAT(circle.GetArea(), WithinAbs(expectedArea, 0.01));
-	REQUIRE_THAT(circle.GetPerimeter(), WithinAbs(expectedPerimeter, 0.01));
-}
-
-TEST_CASE("LineSegment has zero area and correct length", "[geometry][line]")
-{
-	CPoint start{ 0, 0 };
-	CPoint end{ 10, 10 };
-	uint32_t color = 0xFF0000;
-
-	CLineSegment line(start, end, color);
-
-	REQUIRE(line.GetArea() == 0.0);
-
-	double expectedLength = std::hypot(end.x - start.x, end.y - start.y);
-	REQUIRE_THAT(line.GetPerimeter(), WithinAbs(expectedLength, 0.001));
-}
-
 TEST_CASE("LineSegment draws itself correctly", "[draw][line]")
 {
-    MockCanvas mockCanvas;
-    std::vector<std::tuple<CPoint, CPoint, uint32_t>> capturedLines;
+	MockCanvas mockCanvas;
+	std::vector<std::tuple<CPoint, CPoint, uint32_t> > capturedLines;
 
-    When(Method(mockCanvas, DrawLine)).AlwaysDo([&capturedLines](const CPoint& from, const CPoint& to, uint32_t color) {
-        capturedLines.emplace_back(from, to, color);
-    });
+	When(Method(mockCanvas, DrawLine)).AlwaysDo([&capturedLines](const CPoint& from, const CPoint& to, uint32_t color) {
+		capturedLines.emplace_back(from, to, color);
+	});
 
-    CPoint start{ 1.5, 2.5 };
-    CPoint end{ 11.5, 12.5 };
-    uint32_t color = 0x123456;
+	CPoint start{ 1.5, 2.5 };
+	CPoint end{ 11.5, 12.5 };
+	uint32_t color = 0x123456;
 
-    CLineSegment line(start, end, color);
-    line.Draw(mockCanvas.get());
+	CLineSegment line(start, end, color);
+	line.Draw(mockCanvas.get());
 
-    Verify(Method(mockCanvas, DrawLine)).Once();
-    REQUIRE(capturedLines.size() == 1);
+	Verify(Method(mockCanvas, DrawLine)).Once();
+	REQUIRE(capturedLines.size() == 1);
 
-    auto [from, to, drawnColor] = capturedLines[0];
-    REQUIRE(PointsEqual(from, start));
-    REQUIRE(PointsEqual(to, end));
-    REQUIRE(drawnColor == color);
+	auto [from, to, drawnColor] = capturedLines[0];
+	REQUIRE(PointsEqual(from, start));
+	REQUIRE(PointsEqual(to, end));
+	REQUIRE(drawnColor == color);
 }
