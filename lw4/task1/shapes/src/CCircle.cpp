@@ -3,8 +3,9 @@
 #include <sstream>
 #include <iomanip>
 
+// todo: добавить валидацию для сущностей
 CCircle::CCircle(CPoint center, double radius, uint32_t outlineColor, uint32_t fillColor)
-	: m_center(center), m_radius(radius), m_outlineColor(outlineColor), m_fillColor(fillColor)
+	: CSolidShape(outlineColor, fillColor), m_center(center), m_radius(radius)
 {
 }
 
@@ -27,8 +28,6 @@ std::string CCircle::ToString() const
 	return oss.str();
 }
 
-uint32_t CCircle::GetOutlineColor() const { return m_outlineColor; }
-uint32_t CCircle::GetFillColor() const { return m_fillColor; }
 CPoint CCircle::GetCenter() const { return m_center; }
 double CCircle::GetRadius() const { return m_radius; }
 

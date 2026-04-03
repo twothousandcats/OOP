@@ -1,9 +1,9 @@
 #pragma once
-#include "ISolidShape.h"
 #include "ICanvasDrawable.h"
 #include "CPoint.h"
+#include "CSolidShape.h"
 
-class CRectangle : public ISolidShape, public ICanvasDrawable
+class CRectangle : public CSolidShape, public ICanvasDrawable
 {
 public:
 	explicit CRectangle(CPoint leftTop, double width, double height, uint32_t outlineColor, uint32_t fillColor);
@@ -13,10 +13,6 @@ public:
 	double GetPerimeter() const override;
 
 	std::string ToString() const override;
-
-	uint32_t GetOutlineColor() const override;
-
-	uint32_t GetFillColor() const override;
 
 	void Draw(ICanvas& canvas) const override;
 
@@ -32,6 +28,4 @@ private:
 	CPoint m_leftTop;
 	double m_width;
 	double m_height;
-	uint32_t m_outlineColor;
-	uint32_t m_fillColor;
 };

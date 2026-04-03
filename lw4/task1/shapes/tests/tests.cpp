@@ -12,6 +12,8 @@
 using namespace Catch::Matchers;
 using namespace fakeit;
 
+// todo: проверять min/max -> выделить в класс repository
+
 // Helper matcher for points to keep tests concise
 static bool PointsEqual(const CPoint& a, const CPoint& b, const double epsilon = 0.0001)
 {
@@ -19,7 +21,6 @@ static bool PointsEqual(const CPoint& a, const CPoint& b, const double epsilon =
 		&& std::abs(a.y - b.y) < epsilon;
 }
 
-// Arrange-Act-Assert
 TEST_CASE("Rectangle calculates area and perimeter correctly", "[geometry][rectangle]")
 {
 	CPoint topLeft{ 10.0, 20.0 };
@@ -78,6 +79,7 @@ TEST_CASE("LineSegment has zero area and correct length", "[geometry][line]")
 	REQUIRE_THAT(line.GetPerimeter(), WithinAbs(expectedLength, 0.001));
 }
 
+// Arrange-Act-Assert
 TEST_CASE("Rectangle Draw method calls canvas correctly", "[draw][rectangle]")
 {
 	MockCanvas mockCanvas;

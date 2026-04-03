@@ -1,9 +1,9 @@
 #pragma once
-#include "ISolidShape.h"
 #include "ICanvasDrawable.h"
 #include "CPoint.h"
+#include "CSolidShape.h"
 
-class CCircle : public ISolidShape, public ICanvasDrawable
+class CCircle : public CSolidShape, public ICanvasDrawable
 {
 public:
 	explicit CCircle(CPoint center, double radius, uint32_t outlineColor, uint32_t fillColor);
@@ -14,10 +14,6 @@ public:
 
 	std::string ToString() const override;
 
-	uint32_t GetOutlineColor() const override;
-
-	uint32_t GetFillColor() const override;
-
 	void Draw(ICanvas& canvas) const override;
 
 	CPoint GetCenter() const;
@@ -27,6 +23,4 @@ public:
 private:
 	CPoint m_center;
 	double m_radius;
-	uint32_t m_outlineColor;
-	uint32_t m_fillColor;
 };

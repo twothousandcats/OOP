@@ -39,10 +39,12 @@ void CCanvas::FillPolygon(const std::vector<CPoint>& points, const uint32_t fill
 		return;
 	}
 
+	// todo: range-base for - done
 	sf::ConvexShape polygon(points.size());
-	for (size_t i = 0; i < points.size(); ++i)
+	for (int i = 0; const auto [x, y] : points)
 	{
-		polygon.setPoint(i, sf::Vector2f(static_cast<float>(points[i].x), static_cast<float>(points[i].y)));
+		polygon.setPoint(i, sf::Vector2f(static_cast<float>(x), static_cast<float>(y)));
+		i++;
 	}
 	polygon.setFillColor(ToSfColor(fillColor));
 	polygon.setOutlineColor(sf::Color::Transparent);

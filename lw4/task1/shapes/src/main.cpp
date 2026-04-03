@@ -73,19 +73,12 @@ std::unique_ptr<IShape> ParseShape(const std::string& line)
 
 std::vector<std::unique_ptr<IShape> > ReadShapesFromInput()
 {
-	// auto remove for heap
-	// copy protection
-	// shared_ptr allows shared ownership!
 	std::vector<std::unique_ptr<IShape> > shapes;
 	std::string line;
-
 	while (std::getline(std::cin, line))
 	{
 		if (auto shape = ParseShape(line))
 		{
-			// unique_ptr
-			// cant copied, cant be moved push_back by value
-			// so std::move
 			shapes.push_back(std::move(shape));
 		}
 	}
@@ -125,11 +118,11 @@ void AnalyzeAndPrintStats(const std::vector<std::unique_ptr<IShape> >& shapes)
 		[](const auto& a, const auto& b) { return a->GetPerimeter() < b->GetPerimeter(); });
 
 	std::cout << "Shape with largest area:\n";
-	PrintShapeInfo(**maxAreaIt); // 1) unique<IShape> 2) IShape
+	PrintShapeInfo(**maxAreaIt); // it -> unique<IShape> -> IShape
 	std::cout << "\n";
 
 	std::cout << "Shape with smallest perimeter:\n";
-	PrintShapeInfo(**minPerimeterIt);
+	PrintShapeInfo(**minPerimeterIt); // it -> unique<IShape> -> IShape
 	std::cout << "\n";
 }
 
