@@ -18,6 +18,8 @@ public:
 
 	uint32_t GetFillColor() const override;
 
+	void Draw(ICanvas& canvas) const override;
+
 	CPoint GetLeftTop() const;
 
 	CPoint GetRightBottom() const;
@@ -25,8 +27,6 @@ public:
 	double GetWidth() const;
 
 	double GetHeight() const;
-
-	void Draw(ICanvas& canvas) const override;
 
 private:
 	CPoint m_leftTop;

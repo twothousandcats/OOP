@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <optional>
 #include "CPoint.h"
 #include "IShape.h"
 #include "ISolidShape.h"
@@ -30,40 +31,51 @@ std::unique_ptr<IShape> ParseShape(const std::string& line)
 	{
 		double x, y, width, height;
 		uint32_t outlineColor, fillColor;
-		iss >> x >> y >> width >> height >> std::hex >> outlineColor >> std::hex >> fillColor;
+		if (!(iss >> x >> y >> width >> height >> std::hex >> outlineColor >> std::hex >> fillColor))
+		{
+			return nullptr;
+		}
 		return std::make_unique<CRectangle>(CPoint{ x, y }, width, height, outlineColor, fillColor);
 	}
 	if (type == "triangle")
 	{
 		double x1, y1, x2, y2, x3, y3;
 		uint32_t outlineColor, fillColor;
-		iss >> x1 >> y1 >> x2 >> y2 >> x3 >> y3 >> std::hex >> outlineColor >> std::hex >> fillColor;
+		if (!(iss >> x1 >> y1 >> x2 >> y2 >> x3 >> y3 >> std::hex >> outlineColor >> std::hex >> fillColor))
+		{
+			return nullptr;
+		}
 		return std::make_unique<CTriangle>(CPoint{ x1, y1 }, CPoint{ x2, y2 }, CPoint{ x3, y3 }, outlineColor, fillColor);
 	}
 	if (type == "circle")
 	{
 		double x, y, radius;
 		uint32_t outlineColor, fillColor;
-		iss >> x >> y >> radius >> std::hex >> outlineColor >> std::hex >> fillColor;
+		if (!(iss >> x >> y >> radius >> std::hex >> outlineColor >> std::hex >> fillColor))
+		{
+			return nullptr;
+		}
 		return std::make_unique<CCircle>(CPoint{ x, y }, radius, outlineColor, fillColor);
 	}
 	if (type == "line")
 	{
 		double x1, y1, x2, y2;
 		uint32_t outlineColor;
-		iss >> x1 >> y1 >> x2 >> y2 >> std::hex >> outlineColor;
+		if (!(iss >> x1 >> y1 >> x2 >> y2 >> std::hex >> outlineColor))
+		{
+			return nullptr;
+		}
 		return std::make_unique<CLineSegment>(CPoint{ x1, y1 }, CPoint{ x2, y2 }, outlineColor);
 	}
 
 	return nullptr;
 }
 
-int main()
+std::vector<std::unique_ptr<IShape> > ReadShapesFromInput()
 {
-	// auto remove from heap
-	// защита от копирования
-	// Нельзя создать вектор объектов абстрактного класса
-	// shared_ptr допускает совместное владение
+	// auto remove for heap
+	// copy protection
+	// shared_ptr allows shared ownership!
 	std::vector<std::unique_ptr<IShape> > shapes;
 	std::string line;
 
@@ -77,43 +89,56 @@ int main()
 			shapes.push_back(std::move(shape));
 		}
 	}
+	return shapes;
+}
 
+void PrintShapeInfo(const IShape& shape)
+{
+	std::cout << std::fixed << std::setprecision(2);
+	std::cout << "Area: " << shape.GetArea() << "\n";
+	std::cout << "Perimeter: " << shape.GetPerimeter() << "\n";
+	std::cout << "Outline Color: #" << std::hex << shape.GetOutlineColor() << std::dec << "\n";
+
+	if (const auto* solid = dynamic_cast<const ISolidShape*>(&shape))
+	{
+		std::cout << "Fill Color: #" << std::hex << solid->GetFillColor() << std::dec << "\n";
+	}
+
+	std::cout << shape.ToString() << "\n";
+}
+
+void AnalyzeAndPrintStats(const std::vector<std::unique_ptr<IShape> >& shapes)
+{
 	if (shapes.empty())
 	{
-		std::cout << "No shapes provided." << std::endl;
-		return 0;
+		return;
 	}
 
-	const auto maxAreaShape = std::ranges::max_element(shapes,
+	const auto maxAreaIt = std::ranges::max_element(shapes,
 		[](const auto& a, const auto& b) { return a->GetArea() < b->GetArea(); });
 
-	auto minPerimeterShape = std::ranges::min_element(shapes,
+	const auto minPerimeterIt = std::ranges::min_element(shapes,
 		[](const auto& a, const auto& b) { return a->GetPerimeter() < b->GetPerimeter(); });
 
-	std::cout << std::fixed << std::setprecision(2);
 	std::cout << "Shape with largest area:\n";
-	std::cout << "Area: " << (*maxAreaShape)->GetArea() << "\n";
-	std::cout << "Perimeter: " << (*maxAreaShape)->GetPerimeter() << "\n";
-	std::cout << "Outline Color: #" << std::hex << (*maxAreaShape)->GetOutlineColor() << "\n";
-	if (const auto solid = dynamic_cast<ISolidShape*>(maxAreaShape->get()))
-	{
-		std::cout << "Fill Color: #" << std::hex << solid->GetFillColor() << "\n";
-	}
-	std::cout << (*maxAreaShape)->ToString() << "\n\n";
+	PrintShapeInfo(**maxAreaIt);
+	std::cout << "\n";
 
 	std::cout << "Shape with smallest perimeter:\n";
-	std::cout << "Area: " << (*minPerimeterShape)->GetArea() << "\n";
-	std::cout << "Perimeter: " << (*minPerimeterShape)->GetPerimeter() << "\n";
-	std::cout << "Outline Color: #" << std::hex << (*minPerimeterShape)->GetOutlineColor() << "\n";
-	if (auto solid = dynamic_cast<ISolidShape*>(minPerimeterShape->get()))
-	{
-		std::cout << "Fill Color: #" << std::hex << solid->GetFillColor() << "\n";
-	}
-	std::cout << (*minPerimeterShape)->ToString() << "\n";
+	PrintShapeInfo(**minPerimeterIt);
+	std::cout << "\n";
+}
 
+void RunVisualization(const std::vector<std::unique_ptr<IShape> >& shapes)
+{
+	sf::ContextSettings settings;
+	settings.antiAliasingLevel = 8;
 	sf::RenderWindow window(
 		sf::VideoMode(WINDOW_SIZE),
-		WINDOW_TITLE
+		WINDOW_TITLE,
+		sf::Style::Default,
+		sf::State::Windowed,
+		settings
 		);
 	CCanvas canvas(window);
 
@@ -128,6 +153,7 @@ int main()
 		}
 
 		window.clear(sf::Color::White);
+
 		for (const auto& shape : shapes)
 		{
 			if (const auto* drawable = dynamic_cast<const ICanvasDrawable*>(shape.get()))
@@ -138,6 +164,20 @@ int main()
 
 		window.display();
 	}
+}
+
+int main()
+{
+	const auto shapes = ReadShapesFromInput();
+
+	if (shapes.empty())
+	{
+		std::cout << "No shapes provided." << std::endl;
+		return 0;
+	}
+
+	AnalyzeAndPrintStats(shapes);
+	RunVisualization(shapes);
 
 	return 0;
 }

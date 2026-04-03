@@ -18,11 +18,11 @@ public:
 
 	uint32_t GetFillColor() const override;
 
+	void Draw(ICanvas& canvas) const override;
+
 	CPoint GetCenter() const;
 
 	double GetRadius() const;
-
-	void Draw(ICanvas& canvas) const override;
 
 private:
 	CPoint m_center;

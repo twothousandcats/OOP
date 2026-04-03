@@ -23,7 +23,7 @@ sf::Color CCanvas::ToSfColor(uint32_t color)
 	return { r, g, b, a };
 }
 
-void CCanvas::DrawLine(const CPoint& from, const CPoint& to, uint32_t lineColor)
+void CCanvas::DrawLine(const CPoint& from, const CPoint& to, const uint32_t lineColor)
 {
 	const sf::Vertex line[] = {
 		sf::Vertex(sf::Vector2f(static_cast<float>(from.x), static_cast<float>(from.y)), ToSfColor(lineColor)),
@@ -32,10 +32,12 @@ void CCanvas::DrawLine(const CPoint& from, const CPoint& to, uint32_t lineColor)
 	m_window.draw(line, 2, sf::PrimitiveType::Lines);
 }
 
-void CCanvas::FillPolygon(const std::vector<CPoint>& points, uint32_t fillColor)
+void CCanvas::FillPolygon(const std::vector<CPoint>& points, const uint32_t fillColor)
 {
 	if (points.size() < 3)
+	{
 		return;
+	}
 
 	sf::ConvexShape polygon(points.size());
 	for (size_t i = 0; i < points.size(); ++i)
@@ -47,7 +49,7 @@ void CCanvas::FillPolygon(const std::vector<CPoint>& points, uint32_t fillColor)
 	m_window.draw(polygon);
 }
 
-void CCanvas::DrawCircle(const CPoint& center, double radius, uint32_t lineColor)
+void CCanvas::DrawCircle(const CPoint& center, const double radius, const uint32_t lineColor)
 {
 	if (radius <= 0)
 		return;
@@ -60,7 +62,7 @@ void CCanvas::DrawCircle(const CPoint& center, double radius, uint32_t lineColor
 	m_window.draw(circle);
 }
 
-void CCanvas::FillCircle(const CPoint& center, double radius, uint32_t fillColor)
+void CCanvas::FillCircle(const CPoint& center, const double radius, const uint32_t fillColor)
 {
 	if (radius <= 0)
 		return;
