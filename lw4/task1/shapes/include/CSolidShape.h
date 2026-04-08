@@ -10,6 +10,6 @@ public:
 
 	uint32_t GetFillColor() const override;
 
-protected:
+private:
 	uint32_t m_fillColor;
 };

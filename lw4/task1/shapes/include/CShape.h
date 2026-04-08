@@ -8,6 +8,6 @@ public:
 
 	uint32_t GetOutlineColor() const override = 0;
 
-protected:
+private:
 	uint32_t m_outlineColor;
 };
