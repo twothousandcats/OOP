@@ -1,5 +1,7 @@
 #include "CDate.h"
 #include <array>
+#include <stdexcept>
+#include <iostream>
 
 namespace
 {
@@ -21,28 +23,25 @@ bool CDate::IsLeapYear(unsigned year)
 
 unsigned CDate::GetDaysInMonth(Month month, unsigned year)
 {
-	unsigned idx = static_cast<unsigned>(month);
+	const auto idx = static_cast<unsigned>(month);
 	if (idx < 1 || idx > 12)
+	{
 		return 0;
+	}
 
 	if (IsLeapYear(year))
+	{
 		return DAYS_IN_MONTH_LEAP[idx];
-	else
-		return DAYS_IN_MONTH_NORMAL[idx];
+	}
+
+	return DAYS_IN_MONTH_NORMAL[idx];
 }
 
-unsigned CDate::YmdToDays(unsigned day, Month month, unsigned year)
+unsigned CDate::YmdToDays(const unsigned day, Month month, const unsigned year)
 {
 	if (year < MIN_YEAR || year > MAX_YEAR)
 	{
 		throw std::out_of_range("Year out of range");
-	}
-
-	unsigned totalDays = 0;
-
-	for (unsigned y = MIN_YEAR; y < year; ++y)
-	{
-		totalDays += IsLeapYear(y) ? 366 : 365;
 	}
 
 	unsigned monthIdx = static_cast<unsigned>(month);
@@ -51,14 +50,28 @@ unsigned CDate::YmdToDays(unsigned day, Month month, unsigned year)
 		throw std::invalid_argument("Invalid month");
 	}
 
-	for (unsigned m = 1; m < monthIdx; ++m)
-	{
-		totalDays += GetDaysInMonth(static_cast<Month>(m), year);
-	}
-
 	if (day < 1 || day > GetDaysInMonth(month, year))
 	{
 		throw std::invalid_argument("Invalid day");
+	}
+
+	const unsigned yearsSinceEpoch = year - MIN_YEAR;
+
+	const auto countLeapYears = [](unsigned y) -> unsigned {
+		return y / 4 - y / 100 + y / 400;
+	};
+
+	const unsigned leapYearsBeforeEpoch = countLeapYears(MIN_YEAR - 1);
+	const unsigned leapYearsBeforeYear = countLeapYears(year - 1);
+	const unsigned leapYearsInRange = leapYearsBeforeYear - leapYearsBeforeEpoch;
+
+	const unsigned normalYearsInRange = yearsSinceEpoch - leapYearsInRange;
+
+	unsigned totalDays = normalYearsInRange * 365 + leapYearsInRange * 366;
+
+	for (unsigned m = 1; m < monthIdx; ++m)
+	{
+		totalDays += GetDaysInMonth(static_cast<Month>(m), year);
 	}
 
 	totalDays += (day - 1);
@@ -68,36 +81,63 @@ unsigned CDate::YmdToDays(unsigned day, Month month, unsigned year)
 
 CDate::Ymd CDate::DaysToYmd(unsigned days)
 {
-	unsigned year = MIN_YEAR;
+	// todo: доработать константы
+	constexpr unsigned DAYS_IN_YEAR = 365;
+	constexpr unsigned DAYS_IN_400_YEARS = 400 * DAYS_IN_YEAR + 97; // 400 * 365 + 97 leap days
+	constexpr unsigned DAYS_IN_100_YEARS = 100 * DAYS_IN_YEAR + 24; // 100 * 365 + 24 leap days (но первый 400-летний цикл особенный)
+	constexpr unsigned DAYS_IN_4_YEARS = 4 * DAYS_IN_YEAR + 1; // 4 * 365 + 1 leap day
+
+	// 400-year cycle
 	unsigned remainingDays = days;
+	const unsigned cycles400 = remainingDays / DAYS_IN_400_YEARS;
+	unsigned year = MIN_YEAR + cycles400 * 400;
+	remainingDays %= DAYS_IN_400_YEARS;
 
-	if (remainingDays > 365)
+	// 100-year cycle
+	unsigned cycles100 = remainingDays / DAYS_IN_100_YEARS;
+	if (cycles100 == 4)
 	{
-		unsigned estimatedYears = remainingDays / 365;
-		if (estimatedYears > 0)
-			estimatedYears--;
+		cycles100 = 3;
+	}
+	year += cycles100 * 100;
+	remainingDays -= cycles100 * DAYS_IN_100_YEARS;
 
-		unsigned daysInEstimatedYears = 0;
-		for (unsigned y = MIN_YEAR; y < MIN_YEAR + estimatedYears; ++y)
-		{
-			daysInEstimatedYears += IsLeapYear(y) ? 366 : 365;
-		}
+	// 4-year cycle
+	const unsigned cycles4 = remainingDays / DAYS_IN_4_YEARS;
+	year += cycles4 * 4;
+	remainingDays %= DAYS_IN_4_YEARS;
 
-		if (daysInEstimatedYears <= remainingDays)
-		{
-			year += estimatedYears;
-			remainingDays -= daysInEstimatedYears;
-		}
+	unsigned singleYears = remainingDays / DAYS_IN_YEAR;
+	if (singleYears >= 4)
+	{
+		singleYears = 3;
 	}
 
-	while (true)
+	unsigned daysInSingleYears = 0;
+	for (unsigned i = 0; i < singleYears; ++i)
 	{
-		unsigned daysInCurrentYear = IsLeapYear(year) ? 366 : 365;
-		if (remainingDays < daysInCurrentYear)
-			break;
+		daysInSingleYears += IsLeapYear(year + i) ? 366 : 365;
+	}
 
-		remainingDays -= daysInCurrentYear;
-		++year;
+	if (daysInSingleYears <= remainingDays)
+	{
+		year += singleYears;
+		remainingDays -= daysInSingleYears;
+	}
+	else
+	{
+		for (unsigned i = 0; i < singleYears; ++i)
+		{
+			const unsigned daysInThisYear = IsLeapYear(year)
+				? 366
+				: 365;
+			if (remainingDays < daysInThisYear)
+			{
+				break;
+			}
+			remainingDays -= daysInThisYear;
+			++year;
+		}
 	}
 
 	unsigned monthIdx = 1;
@@ -105,7 +145,9 @@ CDate::Ymd CDate::DaysToYmd(unsigned days)
 	{
 		unsigned daysInCurrentMonth = GetDaysInMonth(static_cast<Month>(monthIdx), year);
 		if (remainingDays < daysInCurrentMonth)
+		{
 			break;
+		}
 
 		remainingDays -= daysInCurrentMonth;
 		++monthIdx;
@@ -132,7 +174,6 @@ bool CDate::IsDaysValid(unsigned days)
 }
 
 // constructs
-
 CDate::CDate()
 	: m_daysSinceEpoch(0) // 1 Jan 1970
 {
@@ -398,7 +439,8 @@ std::istream& operator>>(std::istream& is, CDate& date)
 	else
 	{
 		is.clear();
-		if (std::string token; is >> token)
+		std::string token;
+		if (is >> token)
 		{
 			if (token == "INVALID")
 			{
@@ -408,6 +450,10 @@ std::istream& operator>>(std::istream& is, CDate& date)
 			{
 				is.setstate(std::ios::failbit);
 			}
+		}
+		else
+		{
+			is.setstate(std::ios::failbit);
 		}
 	}
 	return is;
