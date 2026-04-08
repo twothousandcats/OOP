@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include "catch2/catch_all.hpp"
+#include <catch2/catch_all.hpp>
 #include "CDate.h"
 #include <sstream>
 #include <string>
@@ -359,7 +359,7 @@ TEST_CASE("CDate Input Stream", "[io]")
 		CDate date;
 		iss >> date;
 
-		REQUIRE(iss.good());
+		REQUIRE(!iss.fail());
 		REQUIRE(date.IsValid());
 		REQUIRE(date.GetDay() == 15);
 		REQUIRE(date.GetMonth() == Month::AUGUST);
@@ -380,7 +380,7 @@ TEST_CASE("CDate Input Stream", "[io]")
 		CDate date;
 		iss >> date;
 
-		REQUIRE(iss.good());
+		REQUIRE(!iss.fail());
 		REQUIRE_FALSE(date.IsValid());
 	}
 
