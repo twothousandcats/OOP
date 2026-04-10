@@ -5,6 +5,11 @@
 
 namespace
 {
+constexpr unsigned HOURS_IN_DAY = 24;
+constexpr unsigned MINUTES_IN_HOUR = 60;
+constexpr unsigned SECONDS_IN_MINUTE = MINUTES_IN_HOUR;
+constexpr unsigned MS_IN_DAY = HOURS_IN_DAY * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * 1000;
+
 // range
 constexpr unsigned MIN_YEAR = 1970;
 constexpr unsigned MAX_YEAR = 9999;
@@ -76,6 +81,10 @@ CDate::CDate(unsigned timestamp)
 		m_daysSinceEpoch.reset();
 	}
 }
+
+// CDate::CDate(const unsigned day, const Month month, const unsigned year)
+// : CDate(YmdToDays(day, month, year) * MS_IN_DAY)
+// {};
 
 bool CDate::IsLeapYear(const unsigned year)
 {

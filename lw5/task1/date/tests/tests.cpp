@@ -9,114 +9,122 @@ CDate MakeInvalidDate()
 {
 	return { 32, Month::JANUARY, 2000 };
 }
-// todo: dry
+
+void RequireValidDate(const CDate& date, unsigned expectedDay, Month expectedMonth, unsigned expectedYear)
+{
+	REQUIRE(date.IsValid());
+	REQUIRE(date.GetDay() == expectedDay);
+	REQUIRE(date.GetMonth() == expectedMonth);
+	REQUIRE(date.GetYear() == expectedYear);
+}
+
+void RequireInvalidDate(const CDate& date)
+{
+	REQUIRE_FALSE(date.IsValid());
+}
+
 TEST_CASE("CDate Default Constructor", "[construct]")
 {
 	const CDate date;
-	REQUIRE(date.IsValid());
-	REQUIRE(date.GetDay() == 1);
-	REQUIRE(date.GetMonth() == Month::JANUARY);
-	REQUIRE(date.GetYear() == 1970);
+	RequireValidDate(date, 1, Month::JANUARY, 1970);
 }
 
-TEST_CASE("CDate Timestamp Constructor", "[construction]")
+TEST_CASE("CDate Timestamp Constructor", "[construction]"
+	)
 {
 	SECTION("Epoch start")
 	{
 		CDate date(0);
-		REQUIRE(date.IsValid());
-		REQUIRE(date.GetDay() == 1);
-		REQUIRE(date.GetMonth() == Month::JANUARY);
-		REQUIRE(date.GetYear() == 1970);
+		RequireValidDate(date, 1, Month::JANUARY, 1970);
 	}
 
 	SECTION("Specific date from prompt: 3 Jan 1970")
 	{
 		CDate date(2);
-		REQUIRE(date.IsValid());
-		REQUIRE(date.GetDay() == 3);
-		REQUIRE(date.GetMonth() == Month::JANUARY);
-		REQUIRE(date.GetYear() == 1970);
+		RequireValidDate(date, 3, Month::JANUARY, 1970);
 	}
 
 	SECTION("Specific date from prompt: 2 Feb 1970")
 	{
 		CDate date(32);
-		REQUIRE(date.IsValid());
-		REQUIRE(date.GetDay() == 2);
-		REQUIRE(date.GetMonth() == Month::FEBRUARY);
-		REQUIRE(date.GetYear() == 1970);
+		RequireValidDate(date, 2, Month::FEBRUARY, 1970);
 	}
 
 	SECTION("Invalid timestamp (future overflow)")
 	{
 		CDate date(10'000'000);
-		REQUIRE_FALSE(date.IsValid());
+		RequireInvalidDate(date);
 	}
 }
 
-TEST_CASE("CDate DMY Constructor", "[construction]")
+TEST_CASE(
+
+	"CDate DMY Constructor"
+	,
+	"[construction]"
+	)
 {
 	SECTION("Valid date")
 	{
 		CDate date(25, Month::DECEMBER, 2023);
-		REQUIRE(date.IsValid());
-		REQUIRE(date.GetDay() == 25);
-		REQUIRE(date.GetMonth() == Month::DECEMBER);
-		REQUIRE(date.GetYear() == 2023);
+		RequireValidDate(date, 25, Month::DECEMBER, 2023);
 	}
 
 	SECTION("Leap year: 29 Feb 2020")
 	{
 		CDate date(29, Month::FEBRUARY, 2020);
-		REQUIRE(date.IsValid());
-		REQUIRE(date.GetDay() == 29);
+		RequireValidDate(date, 29, Month::FEBRUARY, 2020);
 	}
 
 	SECTION("Non-leap year: 29 Feb 2023 -> Invalid")
 	{
 		CDate date(29, Month::FEBRUARY, 2023);
-		REQUIRE_FALSE(date.IsValid());
+		RequireInvalidDate(date);
 	}
 
 	SECTION("Invalid day: 0")
 	{
 		CDate date(0, Month::JANUARY, 2000);
-		REQUIRE_FALSE(date.IsValid());
+		RequireInvalidDate(date);
 	}
 
 	SECTION("Invalid day: 32 in Jan")
 	{
 		CDate date(32, Month::JANUARY, 2000);
-		REQUIRE_FALSE(date.IsValid());
+		RequireInvalidDate(date);
 	}
 
 	SECTION("Boundary: 31 Dec 9999")
 	{
 		CDate date(31, Month::DECEMBER, 9999);
-		REQUIRE(date.IsValid());
+		RequireValidDate(date, 31, Month::DECEMBER, 9999);
 	}
 
 	SECTION("Boundary: 1 Jan 1970")
 	{
 		CDate date(1, Month::JANUARY, 1970);
-		REQUIRE(date.IsValid());
+		RequireValidDate(date, 1, Month::JANUARY, 1970);
 	}
 
 	SECTION("Out of range year: 1969")
 	{
 		CDate date(1, Month::JANUARY, 1969);
-		REQUIRE_FALSE(date.IsValid());
+		RequireInvalidDate(date);
 	}
 
 	SECTION("Out of range year: 10000")
 	{
 		CDate date(1, Month::JANUARY, 10000);
-		REQUIRE_FALSE(date.IsValid());
+		RequireInvalidDate(date);
 	}
 }
 
-TEST_CASE("CDate GetWeekDay", "[getters]")
+TEST_CASE(
+
+	"CDate GetWeekDay"
+	,
+	"[getters]"
+	)
 {
 	CDate epoch(1, Month::JANUARY, 1970);
 	REQUIRE(epoch.GetWeekDay() == WeekDay::THURSDAY);
@@ -131,7 +139,12 @@ TEST_CASE("CDate GetWeekDay", "[getters]")
 	REQUIRE(sunday.GetWeekDay() == WeekDay::SUNDAY);
 }
 
-TEST_CASE("CDate Getters on Invalid Date", "[getters]")
+TEST_CASE(
+
+	"CDate Getters on Invalid Date"
+	,
+	"[getters]"
+	)
 {
 	const CDate invalid = MakeInvalidDate();
 	REQUIRE_FALSE(invalid.IsValid());
@@ -139,7 +152,12 @@ TEST_CASE("CDate Getters on Invalid Date", "[getters]")
 	REQUIRE(invalid.GetYear() == 0);
 }
 
-TEST_CASE("CDate Increment/Decrement", "[arithmetic]")
+TEST_CASE(
+
+	"CDate Increment/Decrement"
+	,
+	"[arithmetic]"
+	)
 {
 	SECTION("Prefix ++")
 	{
@@ -196,7 +214,12 @@ TEST_CASE("CDate Increment/Decrement", "[arithmetic]")
 	}
 }
 
-TEST_CASE("CDate Addition/Subtraction with Days", "[arithmetic]")
+TEST_CASE(
+
+	"CDate Addition/Subtraction with Days"
+	,
+	"[arithmetic]"
+	)
 {
 	SECTION("Add days crossing month")
 	{
@@ -235,7 +258,12 @@ TEST_CASE("CDate Addition/Subtraction with Days", "[arithmetic]")
 	}
 }
 
-TEST_CASE("CDate Difference between Dates", "[arithmetic]")
+TEST_CASE(
+
+	"CDate Difference between Dates"
+	,
+	"[arithmetic]"
+	)
 {
 	SECTION("Positive difference")
 	{
@@ -267,7 +295,12 @@ TEST_CASE("CDate Difference between Dates", "[arithmetic]")
 	}
 }
 
-TEST_CASE("CDate Compound Assignment", "[arithmetic]")
+TEST_CASE(
+
+	"CDate Compound Assignment"
+	,
+	"[arithmetic]"
+	)
 {
 	CDate date(1, Month::JANUARY, 2000);
 
@@ -280,7 +313,12 @@ TEST_CASE("CDate Compound Assignment", "[arithmetic]")
 	REQUIRE(date.GetMonth() == Month::JANUARY);
 }
 
-TEST_CASE("CDate Comparisons", "[comparison]")
+TEST_CASE(
+
+	"CDate Comparisons"
+	,
+	"[comparison]"
+	)
 {
 	CDate d1(1, Month::JANUARY, 2000);
 	CDate d2(2, Month::JANUARY, 2000);
@@ -324,7 +362,12 @@ TEST_CASE("CDate Comparisons", "[comparison]")
 	}
 }
 
-TEST_CASE("CDate Output Stream", "[io]")
+TEST_CASE(
+
+	"CDate Output Stream"
+	,
+	"[io]"
+	)
 {
 	SECTION("Valid date formatting")
 	{
@@ -351,7 +394,12 @@ TEST_CASE("CDate Output Stream", "[io]")
 	}
 }
 
-TEST_CASE("CDate Input Stream", "[io]")
+TEST_CASE(
+
+	"CDate Input Stream"
+	,
+	"[io]"
+	)
 {
 	SECTION("Valid input")
 	{
