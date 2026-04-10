@@ -9,8 +9,8 @@ CDate MakeInvalidDate()
 {
 	return { 32, Month::JANUARY, 2000 };
 }
-
-TEST_CASE("CDate Default Constructor", "[construction]")
+// todo: dry
+TEST_CASE("CDate Default Constructor", "[construct]")
 {
 	const CDate date;
 	REQUIRE(date.IsValid());
@@ -133,7 +133,7 @@ TEST_CASE("CDate GetWeekDay", "[getters]")
 
 TEST_CASE("CDate Getters on Invalid Date", "[getters]")
 {
-	CDate invalid = MakeInvalidDate();
+	const CDate invalid = MakeInvalidDate();
 	REQUIRE_FALSE(invalid.IsValid());
 	REQUIRE(invalid.GetDay() == 0);
 	REQUIRE(invalid.GetYear() == 0);

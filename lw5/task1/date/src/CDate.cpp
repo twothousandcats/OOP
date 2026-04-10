@@ -48,6 +48,7 @@ CDate::CDate()
 {
 }
 
+// todo: использовать делегирующий construct, основа - timestamp
 CDate::CDate(const unsigned day, const Month month, const unsigned year)
 {
 	try
@@ -161,7 +162,7 @@ CDate::Ymd CDate::DaysToYmd(const unsigned days)
 	// 4-year cycle
 	const unsigned cycles4 = remainingDays / DAYS_IN_4_YEARS;
 	year += cycles4 * LEAP_CYCLE_4_YEARS;
-	remainingDays %= DAYS_IN_4_YEARS;
+	remainingDays %= DAYS_IN_4_YEARS; // num of day
 
 	unsigned singleYears = remainingDays / DAYS_IN_NORMAL_YEAR;
 	if (singleYears >= LEAP_CYCLE_4_YEARS)
@@ -175,6 +176,7 @@ CDate::Ymd CDate::DaysToYmd(const unsigned days)
 		daysInSingleYears += IsLeapYear(year + i) ? DAYS_IN_LEAP_YEAR : DAYS_IN_NORMAL_YEAR;
 	}
 
+	// determine days in current year && year
 	if (daysInSingleYears <= remainingDays)
 	{
 		year += singleYears;

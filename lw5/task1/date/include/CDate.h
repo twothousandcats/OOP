@@ -32,8 +32,7 @@ enum class WeekDay
 	SATURDAY
 };
 
-// format DD.MM.YYYY
-// range: 1970 - 9999
+// todo: либо валидный, либо не используем
 class CDate
 {
 public:
@@ -61,11 +60,13 @@ public:
 
 	CDate& operator-=(int days);
 
-	CDate& operator++(); // prefix ++
-	CDate operator++(int); // postfix ++
+	CDate& operator++();
 
-	CDate& operator--(); // prefix --
-	CDate operator--(int); // postfix --
+	CDate operator++(int);
+
+	CDate& operator--();
+
+	CDate operator--(int);
 
 	// comparison
 	bool operator==(const CDate& other) const;
@@ -96,6 +97,7 @@ public:
 private:
 	// days since unix epoch
 	std::optional<unsigned> m_daysSinceEpoch;
+
 	// Convert days since epoch to YMD
 	struct Ymd
 	{
