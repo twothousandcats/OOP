@@ -37,9 +37,6 @@ enum class WeekDay
 class CDate
 {
 public:
-	static constexpr unsigned MIN_YEAR = 1970;
-	static constexpr unsigned MAX_YEAR = 9999;
-
 	// DMY
 	CDate(unsigned day, Month month, unsigned year);
 

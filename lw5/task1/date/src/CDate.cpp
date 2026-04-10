@@ -5,7 +5,14 @@
 
 namespace
 {
+// todo: доработать константы
+constexpr unsigned MIN_YEAR = 1970;
+constexpr unsigned MAX_YEAR = 9999;
 constexpr unsigned DAYS_IN_WEEK = 7;
+constexpr unsigned DAYS_IN_YEAR = 365;
+constexpr unsigned DAYS_IN_400_YEARS = 400 * DAYS_IN_YEAR + 97; // 400 * 365 + 97 leap days
+constexpr unsigned DAYS_IN_100_YEARS = 100 * DAYS_IN_YEAR + 24; // 100 * 365 + 24 leap days (first 400-years cycle is different)
+constexpr unsigned DAYS_IN_4_YEARS = 4 * DAYS_IN_YEAR + 1; // 4 * 365 + 1 leap day
 constexpr auto EPOCH_WEEKDAY = WeekDay::THURSDAY;
 constexpr std::array<unsigned, 13> DAYS_IN_MONTH_NORMAL = {
 	0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
@@ -16,7 +23,7 @@ constexpr std::array<unsigned, 13> DAYS_IN_MONTH_LEAP = {
 };
 }
 
-bool CDate::IsLeapYear(unsigned year)
+bool CDate::IsLeapYear(const unsigned year)
 {
 	return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 }
@@ -61,7 +68,7 @@ unsigned CDate::YmdToDays(const unsigned day, Month month, const unsigned year)
 		return y / 4 - y / 100 + y / 400;
 	};
 
-	const unsigned leapYearsBeforeEpoch = countLeapYears(MIN_YEAR - 1);
+	constexpr unsigned leapYearsBeforeEpoch = countLeapYears(MIN_YEAR - 1);
 	const unsigned leapYearsBeforeYear = countLeapYears(year - 1);
 	const unsigned leapYearsInRange = leapYearsBeforeYear - leapYearsBeforeEpoch;
 
@@ -81,11 +88,6 @@ unsigned CDate::YmdToDays(const unsigned day, Month month, const unsigned year)
 
 CDate::Ymd CDate::DaysToYmd(unsigned days)
 {
-	// todo: доработать константы
-	constexpr unsigned DAYS_IN_YEAR = 365;
-	constexpr unsigned DAYS_IN_400_YEARS = 400 * DAYS_IN_YEAR + 97; // 400 * 365 + 97 leap days
-	constexpr unsigned DAYS_IN_100_YEARS = 100 * DAYS_IN_YEAR + 24; // 100 * 365 + 24 leap days (но первый 400-летний цикл особенный)
-	constexpr unsigned DAYS_IN_4_YEARS = 4 * DAYS_IN_YEAR + 1; // 4 * 365 + 1 leap day
 
 	// 400-year cycle
 	unsigned remainingDays = days;
