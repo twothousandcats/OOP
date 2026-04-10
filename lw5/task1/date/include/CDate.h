@@ -32,8 +32,8 @@ enum class WeekDay
 	SATURDAY
 };
 
-// Date in DD.MM.YYYY format.
-// Year range: 1970 - 9999
+// format DD.MM.YYYY
+// range: 1970 - 9999
 class CDate
 {
 public:

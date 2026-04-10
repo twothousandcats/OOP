@@ -12,7 +12,7 @@ CDate MakeInvalidDate()
 
 TEST_CASE("CDate Default Constructor", "[construction]")
 {
-	CDate date;
+	const CDate date;
 	REQUIRE(date.IsValid());
 	REQUIRE(date.GetDay() == 1);
 	REQUIRE(date.GetMonth() == Month::JANUARY);
