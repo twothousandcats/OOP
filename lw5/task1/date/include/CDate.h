@@ -96,13 +96,6 @@ public:
 private:
 	// days since unix epoch
 	std::optional<unsigned> m_daysSinceEpoch;
-
-	// Check if days count is within valid range
-	static bool IsDaysValid(unsigned days);
-
-	// Convert YMD to days since epoch
-	static unsigned YmdToDays(unsigned day, Month month, unsigned year);
-
 	// Convert days since epoch to YMD
 	struct Ymd
 	{
@@ -110,6 +103,12 @@ private:
 		Month month;
 		unsigned year;
 	};
+
+	// Check if days count is within valid range
+	static bool IsDaysValid(unsigned days);
+
+	// Convert YMD to days since epoch
+	static unsigned YmdToDays(unsigned day, Month month, unsigned year);
 
 	static Ymd DaysToYmd(unsigned days);
 
