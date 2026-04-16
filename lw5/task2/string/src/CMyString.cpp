@@ -2,9 +2,9 @@
 #include <cstring>
 #include <stdexcept>
 
-// Static empty string for moved-from objects
 char CMyString::m_emptyString = '\0';
 
+// Default constructor delegates to the empty state logic
 CMyString::CMyString()
 	: m_data(&m_emptyString)
 	  , m_length(0)
@@ -12,24 +12,13 @@ CMyString::CMyString()
 {
 }
 
+// Delegate from const char* to (const char*, size_t)
 CMyString::CMyString(const char* pString)
-	: m_data(nullptr)
-	  , m_length(0)
-	  , m_capacity(0)
+	: CMyString(pString, pString ? std::strlen(pString) : 0)
 {
-	if (pString != nullptr)
-	{
-		size_t len = std::strlen(pString);
-		CopyFrom(pString, len);
-	}
-	else
-	{
-		m_data = &m_emptyString;
-		m_length = 0;
-		m_capacity = 0;
-	}
 }
 
+// Primary constructor for raw data
 CMyString::CMyString(const char* pString, size_t length)
 	: m_data(nullptr)
 	  , m_length(0)
@@ -41,20 +30,18 @@ CMyString::CMyString(const char* pString, size_t length)
 	}
 	else
 	{
+		// Fallback to empty state if null provided with length
 		m_data = &m_emptyString;
-		m_length = 0;
-		m_capacity = 0;
 	}
 }
 
+// Copy constructor
 CMyString::CMyString(const CMyString& other)
-	: m_data(nullptr)
-	  , m_length(0)
-	  , m_capacity(0)
+	: CMyString(other.m_data, other.m_length)
 {
-	CopyFrom(other.m_data, other.m_length);
 }
 
+// Move constructor
 CMyString::CMyString(CMyString&& other) noexcept
 	: m_data(other.m_data)
 	  , m_length(other.m_length)
@@ -65,12 +52,10 @@ CMyString::CMyString(CMyString&& other) noexcept
 	other.m_capacity = 0;
 }
 
+// Constructor from std::string
 CMyString::CMyString(const std::string& stlString)
-	: m_data(nullptr)
-	  , m_length(0)
-	  , m_capacity(0)
+	: CMyString(stlString.c_str(), stlString.length())
 {
-	CopyFrom(stlString.c_str(), stlString.length());
 }
 
 CMyString::~CMyString()
@@ -81,12 +66,12 @@ CMyString::~CMyString()
 	}
 }
 
-size_t CMyString::GetLength() const
+size_t CMyString::GetLength() const noexcept
 {
 	return m_length;
 }
 
-const char* CMyString::GetStringData() const
+const char* CMyString::GetStringData() const noexcept
 {
 	return m_data;
 }
@@ -102,7 +87,7 @@ CMyString CMyString::SubString(size_t start, size_t length) const
 	return CMyString(m_data + start, actualLength);
 }
 
-void CMyString::Clear()
+void CMyString::Clear() noexcept
 {
 	if (m_data != &m_emptyString)
 	{
@@ -113,7 +98,7 @@ void CMyString::Clear()
 	m_capacity = 0;
 }
 
-size_t CMyString::GetCapacity() const
+size_t CMyString::GetCapacity() const noexcept
 {
 	return m_capacity;
 }
@@ -122,6 +107,7 @@ CMyString& CMyString::operator=(const CMyString& other)
 {
 	if (this != &other)
 	{
+		// Copy-and-swap idiom could be used, but direct implementation is efficient here
 		if (m_data != &m_emptyString)
 		{
 			delete[] m_data;
@@ -142,6 +128,7 @@ CMyString& CMyString::operator=(CMyString&& other) noexcept
 		m_data = other.m_data;
 		m_length = other.m_length;
 		m_capacity = other.m_capacity;
+
 		other.m_data = &m_emptyString;
 		other.m_length = 0;
 		other.m_capacity = 0;
@@ -161,44 +148,24 @@ char& CMyString::operator[](size_t index)
 	return m_data[index];
 }
 
-bool CMyString::operator==(const CMyString& other) const
+// C++20 Spaceship Operator
+std::strong_ordering CMyString::operator<=>(const CMyString& other) const noexcept
 {
-	if (m_length != other.m_length)
+	const size_t minLength = std::min(m_length, other.m_length);
+	if (minLength > 0)
 	{
-		return false;
+		int cmp = std::memcmp(m_data, other.m_data, minLength);
+		if (cmp != 0)
+		{
+			return cmp < 0 ? std::strong_ordering::less : std::strong_ordering::greater;
+		}
 	}
-	return std::memcmp(m_data, other.m_data, m_length) == 0;
-}
 
-bool CMyString::operator!=(const CMyString& other) const
-{
-	return !(*this == other);
-}
-
-bool CMyString::operator<(const CMyString& other) const
-{
-	size_t minLength = std::min(m_length, other.m_length);
-	int cmp = std::memcmp(m_data, other.m_data, minLength);
-	if (cmp != 0)
-	{
-		return cmp < 0;
-	}
-	return m_length < other.m_length;
-}
-
-bool CMyString::operator>(const CMyString& other) const
-{
-	return other < *this;
-}
-
-bool CMyString::operator<=(const CMyString& other) const
-{
-	return !(other < *this);
-}
-
-bool CMyString::operator>=(const CMyString& other) const
-{
-	return !(*this < other);
+	if (m_length < other.m_length)
+		return std::strong_ordering::less;
+	if (m_length > other.m_length)
+		return std::strong_ordering::greater;
+	return std::strong_ordering::equal;
 }
 
 CMyString CMyString::operator+(const CMyString& other) const
@@ -233,14 +200,7 @@ void CMyString::EnsureCapacity(size_t newCapacity)
 	size_t targetCapacity = m_capacity;
 	while (targetCapacity < newCapacity)
 	{
-		if (targetCapacity == 0)
-		{
-			targetCapacity = 1;
-		}
-		else
-		{
-			targetCapacity *= 2;
-		}
+		targetCapacity = (targetCapacity == 0) ? 1 : targetCapacity * 2;
 	}
 
 	char* newData = new char[targetCapacity + 1];
@@ -276,7 +236,7 @@ void CMyString::CopyFrom(const char* source, size_t length)
 	m_capacity = length;
 }
 
-// Non-member operator+ implementations (for const char* and std::string on left side)
+// Non-member operators
 CMyString operator+(const char* lhs, const CMyString& rhs)
 {
 	return CMyString(lhs) += rhs;
@@ -287,7 +247,6 @@ CMyString operator+(const std::string& lhs, const CMyString& rhs)
 	return CMyString(lhs) += rhs;
 }
 
-// Stream operators
 std::ostream& operator<<(std::ostream& os, const CMyString& str)
 {
 	os.write(str.m_data, static_cast<std::streamsize>(str.m_length));
@@ -302,63 +261,63 @@ std::istream& operator>>(std::istream& is, CMyString& str)
 	return is;
 }
 
-// Iterator access methods
-CMyString::Iterator CMyString::begin()
+// Iterator methods implementation
+CMyString::Iterator CMyString::begin() noexcept
 {
 	return Iterator(m_data);
 }
 
-CMyString::Iterator CMyString::end()
+CMyString::Iterator CMyString::end() noexcept
 {
 	return Iterator(m_data + m_length);
 }
 
-CMyString::ConstIterator CMyString::begin() const
+CMyString::ConstIterator CMyString::begin() const noexcept
 {
 	return ConstIterator(m_data);
 }
 
-CMyString::ConstIterator CMyString::end() const
+CMyString::ConstIterator CMyString::end() const noexcept
 {
 	return ConstIterator(m_data + m_length);
 }
 
-CMyString::ConstIterator CMyString::cbegin() const
+CMyString::ConstIterator CMyString::cbegin() const noexcept
 {
 	return ConstIterator(m_data);
 }
 
-CMyString::ConstIterator CMyString::cend() const
+CMyString::ConstIterator CMyString::cend() const noexcept
 {
 	return ConstIterator(m_data + m_length);
 }
 
-CMyString::ReverseIterator CMyString::rbegin()
+CMyString::ReverseIterator CMyString::rbegin() noexcept
 {
 	return ReverseIterator(m_data + m_length - 1);
 }
 
-CMyString::ReverseIterator CMyString::rend()
+CMyString::ReverseIterator CMyString::rend() noexcept
 {
 	return ReverseIterator(m_data - 1);
 }
 
-CMyString::ConstReverseIterator CMyString::rbegin() const
+CMyString::ConstReverseIterator CMyString::rbegin() const noexcept
 {
 	return ConstReverseIterator(m_data + m_length - 1);
 }
 
-CMyString::ConstReverseIterator CMyString::rend() const
+CMyString::ConstReverseIterator CMyString::rend() const noexcept
 {
 	return ConstReverseIterator(m_data - 1);
 }
 
-CMyString::ConstReverseIterator CMyString::crbegin() const
+CMyString::ConstReverseIterator CMyString::crbegin() const noexcept
 {
 	return ConstReverseIterator(m_data + m_length - 1);
 }
 
-CMyString::ConstReverseIterator CMyString::crend() const
+CMyString::ConstReverseIterator CMyString::crend() const noexcept
 {
 	return ConstReverseIterator(m_data - 1);
 }

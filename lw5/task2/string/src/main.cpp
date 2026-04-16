@@ -3,7 +3,7 @@
 
 int main()
 {
-	CMyString str("Hello, World!");
+	const CMyString str("Hello, World!");
 	std::cout << str << std::endl;
 	return 0;
 }
