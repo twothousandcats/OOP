@@ -50,7 +50,7 @@ add_test(NAME dateUnitTests COMMAND date_tests)
 set_property(TEST dateUnitTests PROPERTY LABELS "Unit")
 
 # Цель для запуска тестов
-add_custom_target(run_tests
+add_custom_target(run_tests_date
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R dateUnitTests
         DEPENDS date_tests
         COMMENT "Running unit tests..."
@@ -58,4 +58,4 @@ add_custom_target(run_tests
 )
 
 # Зависимость: приложение не соберется, пока не пройдут тесты
-add_dependencies(date_app run_tests)
+add_dependencies(date_app run_tests_date)
