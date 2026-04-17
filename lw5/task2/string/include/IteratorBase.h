@@ -19,16 +19,17 @@ template <> struct CMyStringIteratorTraits<true>
 	using reference = const char&;
 };
 
-// Base template for all iterators to reduce code duplication
+// Base template for iterator types
 template <bool IsConst, bool IsReverse> class CMyStringIteratorBase
 {
 public:
+	// stl
 	using traits = CMyStringIteratorTraits<IsConst>;
 	using iterator_category = std::random_access_iterator_tag;
 	using value_type = char;
 	using difference_type = std::ptrdiff_t;
-	using pointer = typename traits::pointer;
-	using reference = typename traits::reference;
+	using pointer = traits::pointer;
+	using reference = traits::reference;
 
 	CMyStringIteratorBase() noexcept
 		: m_ptr(nullptr)
@@ -40,9 +41,11 @@ public:
 	{
 	}
 
-	// Conversion from non-const to const iterator
-	template <bool OtherConst, bool OtherReverse,
-		std::enable_if_t<IsConst && !OtherConst && IsReverse == OtherReverse, int> = 0> CMyStringIteratorBase(const CMyStringIteratorBase<OtherConst, OtherReverse>& other) noexcept
+	// Substitution Failure Is Not An Error, it -> const it
+	// current - const
+	// other - !const
+	// same dir
+	template <bool OtherConst, bool OtherReverse, std::enable_if_t<IsConst && !OtherConst && IsReverse == OtherReverse, int> = 0> explicit CMyStringIteratorBase(const CMyStringIteratorBase<OtherConst, OtherReverse>& other) noexcept
 		: m_ptr(other.GetPtr())
 	{
 	}
@@ -51,26 +54,34 @@ public:
 	pointer operator->() const noexcept { return m_ptr; }
 	reference operator[](difference_type n) const noexcept { return m_ptr[IsReverse ? -n : n]; }
 
-	// Prefix increment/decrement
+	// ++it
 	CMyStringIteratorBase& operator++() noexcept
 	{
 		if constexpr (IsReverse)
+		{
 			--m_ptr;
+		}
 		else
+		{
 			++m_ptr;
+		}
 		return *this;
 	}
 
 	CMyStringIteratorBase& operator--() noexcept
 	{
 		if constexpr (IsReverse)
+		{
 			++m_ptr;
+		}
 		else
+		{
 			--m_ptr;
+		}
 		return *this;
 	}
 
-	// Postfix increment/decrement
+	// it++
 	CMyStringIteratorBase operator++(int) noexcept
 	{
 		auto tmp = *this;
@@ -85,25 +96,34 @@ public:
 		return tmp;
 	}
 
-	// Arithmetic operators
+	// it += n
 	CMyStringIteratorBase& operator+=(difference_type n) noexcept
 	{
 		if constexpr (IsReverse)
+		{
 			m_ptr -= n;
+		}
 		else
+		{
 			m_ptr += n;
+		}
 		return *this;
 	}
 
 	CMyStringIteratorBase& operator-=(difference_type n) noexcept
 	{
 		if constexpr (IsReverse)
+		{
 			m_ptr += n;
+		}
 		else
+		{
 			m_ptr -= n;
+		}
 		return *this;
 	}
 
+	// it += n
 	CMyStringIteratorBase operator+(difference_type n) const noexcept
 	{
 		auto tmp = *this;
@@ -121,31 +141,37 @@ public:
 	difference_type operator-(const CMyStringIteratorBase& other) const noexcept
 	{
 		if constexpr (IsReverse)
+		{
 			return other.m_ptr - m_ptr;
+		}
 		else
+		{
 			return m_ptr - other.m_ptr;
+		}
 	}
 
-	// Comparison operators
 	bool operator==(const CMyStringIteratorBase& other) const noexcept { return m_ptr == other.m_ptr; }
 
-	// C++20 Three-way comparison for random access iterators
 	auto operator<=>(const CMyStringIteratorBase& other) const noexcept
 	{
 		if constexpr (IsReverse)
+		{
 			return other.m_ptr <=> m_ptr;
+		}
 		else
+		{
 			return m_ptr <=> other.m_ptr;
+		}
 	}
 
-	// Access raw pointer for internal use or conversion
+	// raw
 	pointer GetPtr() const noexcept { return m_ptr; }
 
 private:
 	pointer m_ptr;
 };
 
-// Non-member operator+ for symmetry (number + iterator)
+// number + iterator
 template <bool IsConst, bool IsReverse> CMyStringIteratorBase<IsConst, IsReverse> operator+(
 	typename CMyStringIteratorBase<IsConst, IsReverse>::difference_type n,
 	const CMyStringIteratorBase<IsConst, IsReverse>& it) noexcept

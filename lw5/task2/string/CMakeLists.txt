@@ -14,7 +14,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Сборка исходников
 file(GLOB SRC_FILES "src/*.cpp")
-list(FILTER SRC_FILES EXCLUDE REGEX ".*tests.*")
+list(FILTER SRC_FILES EXCLUDE REGEX ".*(tests|main).*")
+
 
 # Библиотека логики
 add_library(string_logic STATIC ${SRC_FILES})

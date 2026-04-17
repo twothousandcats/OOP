@@ -1,4 +1,3 @@
-#define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 #include "CMyString.h"
 #include <sstream>
@@ -13,13 +12,9 @@ TEST_CASE("Default constructor creates empty string", "[CMyString]")
 	REQUIRE(strcmp(str.GetStringData(), "") == 0);
 }
 
-TEST_CASE(
-	"Constructor from null-terminated string"
-	,
-	"[CMyString]"
-	)
+TEST_CASE("Constructor from null-terminated string", "[CMyString]")
 {
-	CMyString str("Hello");
+	const CMyString str("Hello");
 	REQUIRE(str.GetLength() == 5);
 	REQUIRE(strcmp(str.GetStringData(), "Hello") == 0);
 }

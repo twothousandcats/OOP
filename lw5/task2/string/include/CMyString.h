@@ -6,23 +6,22 @@
 #include <string>
 #include <cassert>
 #include <algorithm>
-#include <compare> // For operator<=>
+#include <compare>
 
 #include "IteratorBase.h"
 
 class CMyString
 {
 public:
-	// Iterator types using the base template
+	// base it template
 	using Iterator = CMyStringIteratorBase<false, false>;
 	using ConstIterator = CMyStringIteratorBase<true, false>;
 	using ReverseIterator = CMyStringIteratorBase<false, true>;
 	using ConstReverseIterator = CMyStringIteratorBase<true, true>;
 
-	// Constructors
 	CMyString();
 
-	explicit CMyString(const char* pString);
+	CMyString(const char* pString);
 
 	CMyString(const char* pString, size_t length);
 
@@ -34,7 +33,7 @@ public:
 
 	~CMyString();
 
-	// Core functionality
+	// methods
 	size_t GetLength() const noexcept;
 
 	const char* GetStringData() const noexcept;
@@ -45,27 +44,23 @@ public:
 
 	size_t GetCapacity() const noexcept;
 
-	// Assignment
 	CMyString& operator=(const CMyString& other);
 
 	CMyString& operator=(CMyString&& other) noexcept;
 
-	// Access
+	// idx access
 	char operator[](size_t index) const;
 
 	char& operator[](size_t index);
 
-	// Comparison (C++20 Spaceship)
+	// cmp
 	std::strong_ordering operator<=>(const CMyString& other) const noexcept;
 
-	bool operator==(const CMyString& other) const noexcept = default; // Generated from <=>
-
-	// Concatenation
 	CMyString operator+(const CMyString& other) const;
 
 	CMyString& operator+=(const CMyString& other);
 
-	// Iterators
+	// its
 	Iterator begin() noexcept;
 
 	Iterator end() noexcept;
@@ -90,7 +85,6 @@ public:
 
 	ConstReverseIterator crend() const noexcept;
 
-	// Friends
 	friend CMyString operator+(const char* lhs, const CMyString& rhs);
 
 	friend CMyString operator+(const std::string& lhs, const CMyString& rhs);
