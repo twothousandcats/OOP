@@ -4,7 +4,7 @@
 #include <iterator>
 #include <type_traits>
 
-// Helper to determine pointer/reference types based on constness
+// determine pointer/reference types based on constness
 template <bool IsConst> struct CMyStringIteratorTraits;
 
 template <> struct CMyStringIteratorTraits<false>

@@ -167,6 +167,19 @@ std::strong_ordering CMyString::operator<=>(const CMyString& other) const noexce
 	return std::strong_ordering::equal;
 }
 
+bool CMyString::operator==(const CMyString& other) const noexcept
+{
+	if (m_length != other.m_length)
+	{
+		return false;
+	}
+	if (m_length == 0)
+	{
+		return true;
+	}
+	return std::memcmp(m_data, other.m_data, m_length) == 0;
+}
+
 CMyString CMyString::operator+(const CMyString& other) const
 {
 	CMyString result(*this);

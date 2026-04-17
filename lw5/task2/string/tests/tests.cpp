@@ -6,7 +6,7 @@
 
 TEST_CASE("Default constructor creates empty string", "[CMyString]")
 {
-	CMyString str;
+	const CMyString str;
 	REQUIRE(str.GetLength() == 0);
 	REQUIRE(str.GetCapacity() == 0);
 	REQUIRE(strcmp(str.GetStringData(), "") == 0);
@@ -19,22 +19,37 @@ TEST_CASE("Constructor from null-terminated string", "[CMyString]")
 	REQUIRE(strcmp(str.GetStringData(), "Hello") == 0);
 }
 
-TEST_CASE(
-	"Constructor from null-terminated string with empty string"
-	,
-	"[CMyString]"
-	)
+TEST_CASE("Constructor from null-terminated string with empty string", "[CMyString]")
 {
 	CMyString str("");
 	REQUIRE(str.GetLength() == 0);
 	REQUIRE(strcmp(str.GetStringData(), "") == 0);
 }
 
-TEST_CASE(
-	"Constructor from char array with length"
-	,
-	"[CMyString]"
-	)
+TEST_CASE("Constructor from nullptr", "[CMyString]")
+{
+	CMyString str(nullptr);
+	REQUIRE(str.GetLength() == 0);
+	REQUIRE(str.GetCapacity() == 0);
+	REQUIRE(strcmp(str.GetStringData(), "") == 0);
+}
+
+TEST_CASE("Constructor from nullptr with zero length", "[CMyString]")
+{
+	CMyString str(nullptr, 0);
+	REQUIRE(str.GetLength() == 0);
+	REQUIRE(strcmp(str.GetStringData(), "") == 0);
+}
+
+TEST_CASE("Constructor from nullptr with non-zero length produces empty string", "[CMyString]")
+{
+	// nullptr have to be 0 regardless of length
+	CMyString str(nullptr, 5);
+	REQUIRE(str.GetLength() == 0);
+	REQUIRE(strcmp(str.GetStringData(), "") == 0);
+}
+
+TEST_CASE("Constructor from char array with length", "[CMyString]")
 {
 	CMyString str("Hello\0World", 11);
 	REQUIRE(str.GetLength() == 11);
@@ -42,11 +57,7 @@ TEST_CASE(
 	REQUIRE(str.GetStringData()[11] == '\0');
 }
 
-TEST_CASE(
-	"Constructor from char array with zero length"
-	,
-	"[CMyString]"
-	)
+TEST_CASE("Constructor from char array with zero length", "[CMyString]")
 {
 	CMyString str("Hello", 0);
 	REQUIRE(str.GetLength() == 0);
@@ -66,6 +77,18 @@ TEST_CASE(
 }
 
 TEST_CASE(
+	"Constructor from empty std::string"
+	,
+	"[CMyString]"
+	)
+{
+	std::string stlStr;
+	CMyString str(stlStr);
+	REQUIRE(str.GetLength() == 0);
+	REQUIRE(strcmp(str.GetStringData(), "") == 0);
+}
+
+TEST_CASE(
 	"Copy constructor"
 	,
 	"[CMyString]"
@@ -78,6 +101,18 @@ TEST_CASE(
 
 	// Verify deep copy
 	REQUIRE(copy.GetStringData() != original.GetStringData());
+}
+
+TEST_CASE(
+	"Copy constructor from empty string"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString original;
+	CMyString copy(original);
+	REQUIRE(copy.GetLength() == 0);
+	REQUIRE(strcmp(copy.GetStringData(), "") == 0);
 }
 
 TEST_CASE(
@@ -220,6 +255,19 @@ TEST_CASE(
 }
 
 TEST_CASE(
+	"Clear on already-empty string"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString str;
+	str.Clear();
+	REQUIRE(str.GetLength() == 0);
+	REQUIRE(str.GetCapacity() == 0);
+	REQUIRE(strcmp(str.GetStringData(), "") == 0);
+}
+
+TEST_CASE(
 	"Copy assignment operator"
 	,
 	"[CMyString]"
@@ -231,6 +279,47 @@ TEST_CASE(
 
 	REQUIRE(str2.GetLength() == 5);
 	REQUIRE(strcmp(str2.GetStringData(), "First") == 0);
+}
+
+TEST_CASE(
+	"Copy assignment from empty to non-empty"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString empty;
+	CMyString str("SomeValue");
+	str = empty;
+	REQUIRE(str.GetLength() == 0);
+	REQUIRE(strcmp(str.GetStringData(), "") == 0);
+}
+
+TEST_CASE(
+	"Copy assignment from non-empty to empty"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString empty;
+	CMyString str("SomeValue");
+	empty = str;
+	REQUIRE(empty.GetLength() == 9);
+	REQUIRE(strcmp(empty.GetStringData(), "SomeValue") == 0);
+}
+
+TEST_CASE(
+	"Chained copy assignment"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString a("aaa");
+	CMyString b("bbb");
+	CMyString c("ccc");
+	a = b = c;
+	REQUIRE(strcmp(a.GetStringData(), "ccc") == 0);
+	REQUIRE(strcmp(b.GetStringData(), "ccc") == 0);
+	REQUIRE(strcmp(c.GetStringData(), "ccc") == 0);
 }
 
 TEST_CASE(
@@ -258,6 +347,19 @@ TEST_CASE(
 	REQUIRE(str2.GetLength() == 6);
 	REQUIRE(strcmp(str2.GetStringData(), "Source") == 0);
 	REQUIRE(str1.GetLength() == 0);
+}
+
+TEST_CASE(
+	"Self move-assignment"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString str("SelfMove");
+	str = std::move(str);
+	// Must not crash or corrupt the object
+	REQUIRE(str.GetLength() == 8);
+	REQUIRE(strcmp(str.GetStringData(), "SelfMove") == 0);
 }
 
 TEST_CASE(
@@ -294,6 +396,38 @@ TEST_CASE(
 
 	REQUIRE(str1 == str2);
 	REQUIRE(!(str1 == str3));
+}
+
+TEST_CASE(
+	"Equality with empty strings"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString empty1;
+	CMyString empty2;
+	CMyString emptyLiteral("");
+	CMyString nonEmpty("x");
+
+	REQUIRE(empty1 == empty2);
+	REQUIRE(empty1 == emptyLiteral);
+	REQUIRE(!(empty1 == nonEmpty));
+}
+
+TEST_CASE(
+	"Equality with embedded nulls distinguishes strings after null byte"
+	,
+	"[CMyString]"
+	)
+{
+	// strcmp-based implementation would incorrectly say these are equal
+	CMyString a("A\0B", 3);
+	CMyString b("A\0C", 3);
+	CMyString c("A\0B", 3);
+
+	REQUIRE(a == c);
+	REQUIRE(!(a == b));
+	REQUIRE(a != b);
 }
 
 TEST_CASE(
@@ -368,6 +502,52 @@ TEST_CASE(
 }
 
 TEST_CASE(
+	"Comparison with empty strings"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString empty;
+	CMyString nonEmpty("x");
+
+	REQUIRE(empty < nonEmpty);
+	REQUIRE(nonEmpty > empty);
+	REQUIRE(empty <= nonEmpty);
+	REQUIRE(nonEmpty >= empty);
+	REQUIRE(empty == CMyString());
+}
+
+TEST_CASE(
+	"Comparison with embedded nulls uses memcmp semantics"
+	,
+	"[CMyString]"
+	)
+{
+	// memcmp treats \0 as a regular byte; strcmp would stop at it
+	CMyString a("A\0B", 3);
+	CMyString b("A\0C", 3);
+
+	REQUIRE(a < b);
+	REQUIRE(b > a);
+}
+
+TEST_CASE(
+	"Spaceship operator returns strong_ordering"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString a("Apple");
+	CMyString b("Banana");
+
+	auto result = a <=> b;
+	// Verify it's actually strong_ordering (compile-time check via type)
+	static_assert(std::is_same_v<decltype(result), std::strong_ordering>);
+	REQUIRE(result == std::strong_ordering::less);
+	REQUIRE((a <=> a) == std::strong_ordering::equal);
+}
+
+TEST_CASE(
 	"Concatenation with +"
 	,
 	"[CMyString]"
@@ -393,6 +573,66 @@ TEST_CASE(
 
 	REQUIRE(str1.GetLength() == 11);
 	REQUIRE(strcmp(str1.GetStringData(), "Hello World") == 0);
+}
+
+TEST_CASE(
+	"Concatenation with empty operand does not change result"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString str("NonEmpty");
+	CMyString empty;
+
+	CMyString r1 = str + empty;
+	CMyString r2 = empty + str;
+	REQUIRE(strcmp(r1.GetStringData(), "NonEmpty") == 0);
+	REQUIRE(strcmp(r2.GetStringData(), "NonEmpty") == 0);
+
+	str += empty;
+	REQUIRE(strcmp(str.GetStringData(), "NonEmpty") == 0);
+	REQUIRE(str.GetLength() == 8);
+}
+
+TEST_CASE(
+	"Self-concatenation with += doubles the string"
+	,
+	"[CMyString]"
+	)
+{
+	// Dangerous case: self-reference during reallocation
+	CMyString str("AB");
+	str += str;
+	REQUIRE(str.GetLength() == 4);
+	REQUIRE(strcmp(str.GetStringData(), "ABAB") == 0);
+}
+
+TEST_CASE(
+	"Self-concatenation triggers reallocation safely"
+	,
+	"[CMyString]"
+	)
+{
+	// Force reallocation: start small, double into new buffer
+	CMyString str("Hello");
+	const size_t oldCap = str.GetCapacity();
+	str += str; // likely requires growth
+	REQUIRE(str.GetLength() == 10);
+	REQUIRE(strcmp(str.GetStringData(), "HelloHello") == 0);
+	REQUIRE(str.GetCapacity() >= 10);
+	REQUIRE(str.GetCapacity() > oldCap);
+}
+
+TEST_CASE(
+	"Concatenation preserves data across capacity growth"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString str("ABCDEFGHIJ"); // 10 chars
+	str += CMyString("KLMNOPQRST"); // triggers growth
+	REQUIRE(str.GetLength() == 20);
+	REQUIRE(strcmp(str.GetStringData(), "ABCDEFGHIJKLMNOPQRST") == 0);
 }
 
 TEST_CASE(
@@ -435,6 +675,22 @@ TEST_CASE(
 }
 
 TEST_CASE(
+	"Output stream writes embedded nulls as bytes"
+	,
+	"[CMyString]"
+	)
+{
+	CMyString str("A\0B", 3);
+	std::ostringstream oss;
+	oss << str;
+	std::string result = oss.str();
+	REQUIRE(result.size() == 3);
+	REQUIRE(result[0] == 'A');
+	REQUIRE(result[1] == '\0');
+	REQUIRE(result[2] == 'B');
+}
+
+TEST_CASE(
 	"Input stream operator"
 	,
 	"[CMyString]"
@@ -456,6 +712,31 @@ TEST_CASE(
 	CMyString str("Iterate");
 	auto it = str.begin();
 	REQUIRE(*it == 'I');
+}
+
+TEST_CASE(
+	"Empty string begin equals end"
+	,
+	"[CMyString][Iterator]"
+	)
+{
+	CMyString empty;
+	REQUIRE(empty.begin() == empty.end());
+	REQUIRE(empty.cbegin() == empty.cend());
+	REQUIRE(empty.rbegin() == empty.rend());
+	REQUIRE(empty.crbegin() == empty.crend());
+}
+
+TEST_CASE(
+	"Default-constructed iterator"
+	,
+	"[CMyString][Iterator]"
+	)
+{
+	// Random-access iterators must be default-constructible
+	CMyString::Iterator it1;
+	CMyString::Iterator it2;
+	REQUIRE(it1 == it2);
 }
 
 TEST_CASE(
@@ -835,11 +1116,7 @@ TEST_CASE(
 	REQUIRE(longStr > shortStr);
 }
 
-TEST_CASE(
-	"Substring at boundaries"
-	,
-	"[CMyString]"
-	)
+TEST_CASE("Substring at boundaries", "[CMyString]")
 {
 	CMyString str("Boundary");
 

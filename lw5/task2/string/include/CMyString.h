@@ -56,6 +56,8 @@ public:
 	// cmp
 	std::strong_ordering operator<=>(const CMyString& other) const noexcept;
 
+	bool operator==(const CMyString& other) const noexcept;
+
 	CMyString operator+(const CMyString& other) const;
 
 	CMyString& operator+=(const CMyString& other);
