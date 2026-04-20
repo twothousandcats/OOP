@@ -6,20 +6,18 @@
 
 // determine pointer/reference types based on constness
 template <bool IsConst> struct CMyStringIteratorTraits;
-
 template <> struct CMyStringIteratorTraits<false>
 {
 	using pointer = char*;
 	using reference = char&;
 };
-
 template <> struct CMyStringIteratorTraits<true>
 {
 	using pointer = const char*;
 	using reference = const char&;
 };
 
-// Base template for iterator types
+// base template for iterator types
 template <bool IsConst, bool IsReverse> class CMyStringIteratorBase
 {
 public:
@@ -171,7 +169,7 @@ private:
 	pointer m_ptr;
 };
 
-// number + iterator
+// free number + iterator
 template <bool IsConst, bool IsReverse> CMyStringIteratorBase<IsConst, IsReverse> operator+(
 	typename CMyStringIteratorBase<IsConst, IsReverse>::difference_type n,
 	const CMyStringIteratorBase<IsConst, IsReverse>& it) noexcept

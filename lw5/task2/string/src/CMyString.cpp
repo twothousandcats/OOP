@@ -42,13 +42,10 @@ CMyString::CMyString(const CMyString& other)
 
 // move
 CMyString::CMyString(CMyString&& other) noexcept
-	: m_data(other.m_data)
-	  , m_length(other.m_length)
-	  , m_capacity(other.m_capacity)
+	: m_data(std::exchange(other.m_data, &m_emptyString))
+	, m_length(std::exchange(other.m_length, 0))
+	, m_capacity(std::exchange(other.m_capacity, 0))
 {
-	other.m_data = &m_emptyString;
-	other.m_length = 0;
-	other.m_capacity = 0;
 }
 
 // std::string -> primary
@@ -110,13 +107,13 @@ CMyString& CMyString::operator=(const CMyString& other)
 		{
 			delete[] m_data;
 		}
-		CopyFrom(other.m_data, other.m_length);
+		CopyFrom(other.m_data, other.m_length); // todo: через констуртор
 	}
 	return *this;
 }
 
 CMyString& CMyString::operator=(CMyString&& other) noexcept
-{
+{ // todo: std::exchange && dry
 	if (this != &other)
 	{
 		if (m_data != &m_emptyString)
@@ -241,7 +238,7 @@ void CMyString::CopyFrom(const char* source, const size_t length)
 	}
 
 	m_data = new char[length + 1];
-	std::memcpy(m_data, source, length);
+	std::memcpy(m_data, source, length); // todo: std::memcpy обрабатывать исключение(везде)
 	m_data[length] = '\0';
 	m_length = length;
 	m_capacity = length;

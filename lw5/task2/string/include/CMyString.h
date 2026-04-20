@@ -107,7 +107,7 @@ private:
 	void CopyFrom(const char* source, size_t length);
 };
 
-// Non-member declarations
+// free
 CMyString operator+(const char* lhs, const CMyString& rhs);
 
 CMyString operator+(const std::string& lhs, const CMyString& rhs);

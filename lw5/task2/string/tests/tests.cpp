@@ -3,6 +3,7 @@
 #include <sstream>
 #include <cstring>
 #include <algorithm>
+// todo: разименование итераторов
 
 TEST_CASE("Default constructor creates empty string", "[CMyString]")
 {
@@ -88,18 +89,14 @@ TEST_CASE(
 	REQUIRE(strcmp(str.GetStringData(), "") == 0);
 }
 
-TEST_CASE(
-	"Copy constructor"
-	,
-	"[CMyString]"
-	)
+TEST_CASE("Copy constructor", "[CMyString]")
 {
 	CMyString original("Original");
 	CMyString copy(original);
 	REQUIRE(copy.GetLength() == original.GetLength());
 	REQUIRE(strcmp(copy.GetStringData(), original.GetStringData()) == 0);
 
-	// Verify deep copy
+	// verify
 	REQUIRE(copy.GetStringData() != original.GetStringData());
 }
 
@@ -127,22 +124,18 @@ TEST_CASE(
 	REQUIRE(moved.GetLength() == 7);
 	REQUIRE(strcmp(moved.GetStringData(), "Movable") == 0);
 
-	// Original should be in valid but empty state
 	REQUIRE(original.GetLength() == 0);
 	REQUIRE(strcmp(original.GetStringData(), "") == 0);
 }
 
-TEST_CASE(
-	"Destructor cleans up memory"
-	,
-	"[CMyString]"
-	)
+TEST_CASE("Destructor cleans up memory", "[CMyString]")
 {
 	{
 		CMyString str("Temporary");
 		REQUIRE(str.GetLength() == 9);
 	}
-	// If destructor fails, memory leak would occur (detected by tools)
+
+	// have to detect memory leak?
 }
 
 TEST_CASE(
@@ -191,7 +184,7 @@ TEST_CASE(
 	REQUIRE(data[0] == 'A');
 	REQUIRE(data[1] == '\0');
 	REQUIRE(data[2] == 'B');
-	REQUIRE(data[3] == '\0'); // terminator
+	REQUIRE(data[3] == '\0'); // term
 }
 
 TEST_CASE(
@@ -703,11 +696,8 @@ TEST_CASE(
 	REQUIRE(strcmp(str.GetStringData(), "Input") == 0);
 }
 
-TEST_CASE(
-	"Forward iterator begin/end"
-	,
-	"[CMyString][Iterator]"
-	)
+// iterators
+TEST_CASE("Forward iterator begin/end", "[CMyString][Iterator]")
 {
 	CMyString str("Iterate");
 	auto it = str.begin();
@@ -733,7 +723,7 @@ TEST_CASE(
 	"[CMyString][Iterator]"
 	)
 {
-	// Random-access iterators must be default-constructible
+	// random-access iterators must be default
 	CMyString::Iterator it1;
 	CMyString::Iterator it2;
 	REQUIRE(it1 == it2);
@@ -768,19 +758,6 @@ TEST_CASE(
 }
 
 TEST_CASE(
-	"Const forward iterator"
-	,
-	"[CMyString][Iterator]"
-	)
-{
-	const CMyString str("Const");
-	auto it = str.begin();
-	REQUIRE(*it == 'C');
-	++it;
-	REQUIRE(*it == 'o');
-}
-
-TEST_CASE(
 	"Iterator difference"
 	,
 	"[CMyString][Iterator]"
@@ -811,8 +788,8 @@ TEST_CASE(
 	)
 {
 	CMyString str("Subtract");
-	auto it = str.begin() + 5; // points to 'a'
-	it = it - 3; // points to 'b'
+	auto it = str.begin() + 5; // to 'a'
+	it = it - 3; // to 'b'
 	REQUIRE(*it == 'b');
 }
 
@@ -826,6 +803,7 @@ TEST_CASE(
 	auto it = str.begin();
 	REQUIRE(it[0] == 'I');
 	REQUIRE(it[3] == 'e');
+	// todo: -1 выходы за
 }
 
 TEST_CASE(
@@ -853,9 +831,9 @@ TEST_CASE(
 {
 	CMyString str("Range");
 	std::string result;
-	for (char c : str)
+	for (const char ch : str)
 	{
-		result += c;
+		result += ch;
 	}
 	REQUIRE(result == "Range");
 }
@@ -868,22 +846,22 @@ TEST_CASE(
 {
 	const CMyString str("ConstRange");
 	std::string result;
-	for (char c : str)
+	for (char ch : str)
 	{
-		result += c;
+		result += ch;
 	}
 	REQUIRE(result == "ConstRange");
 }
 
 TEST_CASE(
-	"cbegin/cend"
+	"cbegin"
 	,
 	"[CMyString][Iterator]"
 	)
 {
 	CMyString str("CBEGIN");
-	auto it = str.cbegin();
-	REQUIRE(*it == 'C');
+	auto it1 = str.cbegin();
+	REQUIRE(*it1 == 'C');
 }
 
 TEST_CASE(
