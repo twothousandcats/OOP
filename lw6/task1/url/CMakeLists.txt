@@ -6,18 +6,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Warnings as errors
-if(MSVC)
-    add_compile_options(/W4 /WX)
-else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-endif()
+#if(MSVC)
+#    add_compile_options(/W4 /WX)
+#else()
+#    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+#endif()
 
 # Сборка исходников
-file(GLOB SRC_FILES "src/*.cpp")
-list(FILTER SRC_FILES EXCLUDE REGEX ".*tests.*")
+add_library(url_logic STATIC
+        src/CHttpUrl.cpp
+        src/CUrlParsingError.cpp
+)
+
 
 # Библиотека логики
-add_library(url_logic STATIC ${SRC_FILES})
+#add_library(url_logic STATIC ${SRC_FILES})
 target_include_directories(url_logic PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>

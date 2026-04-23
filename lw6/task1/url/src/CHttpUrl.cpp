@@ -2,8 +2,6 @@
 #include "CUrlParsingError.h"
 
 #include <algorithm>
-#include <cctype>
-#include <limits>
 #include <regex>
 #include <stdexcept>
 #include <string>

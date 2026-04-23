@@ -7,7 +7,7 @@
 namespace
 {
 
-std::string ProtocolToString(Protocol protocol)
+std::string ProtocolToString(const Protocol protocol)
 {
 	return (protocol == Protocol::HTTPS) ? "https" : "http";
 }
