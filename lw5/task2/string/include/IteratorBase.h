@@ -1,16 +1,19 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
 
 // determine pointer/reference types based on constness
 template <bool IsConst> struct CMyStringIteratorTraits;
+
 template <> struct CMyStringIteratorTraits<false>
 {
 	using pointer = char*;
 	using reference = char&;
 };
+
 template <> struct CMyStringIteratorTraits<true>
 {
 	using pointer = const char*;
@@ -48,13 +51,28 @@ public:
 	{
 	}
 
-	reference operator*() const noexcept { return *m_ptr; }
-	pointer operator->() const noexcept { return m_ptr; }
-	reference operator[](difference_type n) const noexcept { return m_ptr[IsReverse ? -n : n]; }
+	reference operator*() const noexcept
+	{
+		assert(m_ptr != nullptr);
+		return *m_ptr;
+	}
+
+	pointer operator->() const noexcept
+	{
+		assert(m_ptr != nullptr);
+		return m_ptr;
+	}
+
+	reference operator[](difference_type n) const noexcept
+	{
+		assert(m_ptr != nullptr);
+		return m_ptr[IsReverse ? -n : n];
+	}
 
 	// ++it
 	CMyStringIteratorBase& operator++() noexcept
 	{
+		assert(m_ptr != nullptr);
 		if constexpr (IsReverse)
 		{
 			--m_ptr;
@@ -68,6 +86,7 @@ public:
 
 	CMyStringIteratorBase& operator--() noexcept
 	{
+		assert(m_ptr != nullptr);
 		if constexpr (IsReverse)
 		{
 			++m_ptr;
@@ -97,6 +116,7 @@ public:
 	// it += n
 	CMyStringIteratorBase& operator+=(difference_type n) noexcept
 	{
+		assert(m_ptr != nullptr);
 		if constexpr (IsReverse)
 		{
 			m_ptr -= n;
@@ -110,6 +130,7 @@ public:
 
 	CMyStringIteratorBase& operator-=(difference_type n) noexcept
 	{
+		assert(m_ptr != nullptr);
 		if constexpr (IsReverse)
 		{
 			m_ptr += n;
@@ -138,6 +159,7 @@ public:
 
 	difference_type operator-(const CMyStringIteratorBase& other) const noexcept
 	{
+		assert(m_ptr != nullptr && other.m_ptr != nullptr);
 		if constexpr (IsReverse)
 		{
 			return other.m_ptr - m_ptr;
@@ -152,6 +174,7 @@ public:
 
 	auto operator<=>(const CMyStringIteratorBase& other) const noexcept
 	{
+		assert(m_ptr != nullptr && other.m_ptr != nullptr);
 		if constexpr (IsReverse)
 		{
 			return other.m_ptr <=> m_ptr;
