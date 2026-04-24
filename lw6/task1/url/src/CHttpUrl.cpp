@@ -37,6 +37,7 @@ Protocol ParseProtocolString(const std::string& protocolStr)
 	throw CUrlParsingError("Unsupported protocol: " + protocolStr);
 }
 
+// isalnum -> noexcept
 bool IsValidDomainLabel(const std::string& label) noexcept
 {
 	if (label.empty() || label.size() > MAX_DOMAIN_LABEL_LENGTH)
@@ -49,7 +50,7 @@ bool IsValidDomainLabel(const std::string& label) noexcept
 	}
 	for (const char ch : label)
 	{
-		const unsigned char uch = static_cast<unsigned char>(ch);
+		const auto uch = static_cast<unsigned char>(ch);
 		if (!std::isalnum(uch) && ch != '-')
 		{
 			return false;
@@ -58,6 +59,7 @@ bool IsValidDomainLabel(const std::string& label) noexcept
 	return true;
 }
 
+// find, substr -> bad_alloc
 bool IsValidDomain(const std::string& domain) noexcept
 {
 	if (domain.empty())
@@ -84,6 +86,7 @@ bool IsValidDomain(const std::string& domain) noexcept
 	return true;
 }
 
+// iscntrl -> noexcept
 bool IsValidDocument(const std::string& document) noexcept
 {
 	if (document.empty() || document.front() != '/')
@@ -92,7 +95,7 @@ bool IsValidDocument(const std::string& document) noexcept
 	}
 	for (const char ch : document)
 	{
-		const unsigned char uch = static_cast<unsigned char>(ch);
+		const auto uch = static_cast<unsigned char>(ch);
 		if (std::iscntrl(uch) || ch == ' ')
 		{
 			return false;
