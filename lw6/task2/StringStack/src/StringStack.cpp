@@ -12,7 +12,7 @@ CStringStack::CStringStack(const CStringStack& other)
 {
 	CopyFrom(other);
 }
-
+// std::exchange
 CStringStack::CStringStack(CStringStack&& other) noexcept
 	: m_top(other.m_top)
 	  , m_size(other.m_size)
@@ -84,7 +84,6 @@ void CStringStack::Pop()
 
 void CStringStack::Clear() noexcept
 {
-	// Iterative traversal avoids deep recursion on long stacks.
 	while (m_top != nullptr)
 	{
 		Node* next = m_top->next;
@@ -118,7 +117,7 @@ void CStringStack::Swap(CStringStack& other) noexcept
 	std::swap(m_size, other.m_size);
 }
 
-// Builds an independent deep copy of `other` into *this
+// Builds deep copy of `other` into this
 void CStringStack::CopyFrom(const CStringStack& other)
 {
 	if (other.m_top == nullptr)

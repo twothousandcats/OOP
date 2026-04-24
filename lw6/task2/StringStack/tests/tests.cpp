@@ -53,7 +53,6 @@ TEST_CASE("stack preserves LIFO order")
 	CHECK(stack.GetSize() == 0);
 }
 
-// todo: разобраться почему правильно отрабатывает
 TEST_CASE("rvalue Push works correctly")
 {
 	CStringStack stack;
