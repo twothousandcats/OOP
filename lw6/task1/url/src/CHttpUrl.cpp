@@ -161,9 +161,7 @@ CHttpUrl::CHttpUrl(const std::string& url)
 	: m_protocol(Protocol::HTTP)
 	  , m_port(HTTP_DEFAULT_PORT)
 {
-	static const std::regex urlRegex(
-		R"(^([A-Za-z]+)://([^/:\s]+)(?::([^/\s]*))?(/[^\s]*)?$)");
-
+	static const std::regex urlRegex(R"(^([A-Za-z]+)://([^/:\s]+)(?::([^/\s]*))?(/[^\s]*)?$)");
 	std::smatch match;
 	if (!std::regex_match(url, match, urlRegex))
 	{

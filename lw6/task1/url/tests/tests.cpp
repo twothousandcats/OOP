@@ -23,19 +23,6 @@ TEST_CASE("CHttpUrl parses an https URL and uses port 443 by default")
 	CHECK(url.GetDocument() == "/");
 }
 
-TEST_CASE("CHttpUrl parses document path with nested segments")
-{
-	const CHttpUrl url("http://example.com/images/photo.jpg");
-	CHECK(url.GetDocument() == "/images/photo.jpg");
-}
-
-TEST_CASE("CHttpUrl parses custom port")
-{
-	const CHttpUrl url("http://example.com:8080/index.html");
-	CHECK(url.GetPort() == 8080);
-	CHECK(url.GetDocument() == "/index.html");
-}
-
 TEST_CASE("CHttpUrl protocol parsing is case-insensitive")
 {
 	CHECK(CHttpUrl("HtTp://example.com").GetProtocol() == Protocol::HTTP);
@@ -49,10 +36,23 @@ TEST_CASE("CHttpUrl keeps domain unchanged (not lowercased)")
 	CHECK(url.GetDomain() == "Example.COM");
 }
 
+TEST_CASE("CHttpUrl parses document path with nested segments")
+{
+	const CHttpUrl url("http://example.com/images/photo.jpg");
+	CHECK(url.GetDocument() == "/images/photo.jpg");
+}
+
 TEST_CASE("CHttpUrl accepts query string and fragment inside document part")
 {
 	const CHttpUrl url("http://example.com/search?q=cats&page=2#top");
 	CHECK(url.GetDocument() == "/search?q=cats&page=2#top");
+}
+
+TEST_CASE("CHttpUrl parses custom port")
+{
+	const CHttpUrl url("http://example.com:8080/index.html");
+	CHECK(url.GetPort() == 8080);
+	CHECK(url.GetDocument() == "/index.html");
 }
 
 TEST_CASE("CHttpUrl accepts boundary port values")
@@ -121,16 +121,16 @@ TEST_CASE("CHttpUrl component constructor uses default port for protocol")
 	CHECK(https.GetPort() == 443);
 }
 
+TEST_CASE("CHttpUrl component constructor accepts custom port")
+{
+	const CHttpUrl url("example.com", "/", Protocol::HTTP, 8080);
+	CHECK(url.GetPort() == 8080);
+}
+
 TEST_CASE("CHttpUrl component constructor prepends slash to document")
 {
 	const CHttpUrl url("example.com", "index.html", Protocol::HTTP);
 	CHECK(url.GetDocument() == "/index.html");
-}
-
-TEST_CASE("CHttpUrl component constructor treats empty document as root")
-{
-	const CHttpUrl url("example.com", "", Protocol::HTTP);
-	CHECK(url.GetDocument() == "/");
 }
 
 TEST_CASE("CHttpUrl component constructor keeps existing leading slash")
@@ -139,10 +139,10 @@ TEST_CASE("CHttpUrl component constructor keeps existing leading slash")
 	CHECK(url.GetDocument() == "/path/page");
 }
 
-TEST_CASE("CHttpUrl component constructor accepts custom port")
+TEST_CASE("CHttpUrl component constructor treats empty document as root")
 {
-	const CHttpUrl url("example.com", "/", Protocol::HTTP, 8080);
-	CHECK(url.GetPort() == 8080);
+	const CHttpUrl url("example.com", "", Protocol::HTTP);
+	CHECK(url.GetDocument() == "/");
 }
 
 TEST_CASE("CHttpUrl component constructor rejects invalid arguments with std::invalid_argument")
