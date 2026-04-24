@@ -170,7 +170,6 @@ TEST_CASE("CHttpUrl::GetURL includes non-default port")
 		== "http://example.com:8080/index.html");
 	CHECK(
 		CHttpUrl("https://example.com:8443/").GetURL() == "https://example.com:8443/");
-	// 443 on http and 80 on https are not standard for their protocols -> shown.
 	CHECK(CHttpUrl("http://example.com:443/").GetURL() == "http://example.com:443/");
 	CHECK(CHttpUrl("https://example.com:80/").GetURL() == "https://example.com:80/");
 }
