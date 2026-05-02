@@ -5,7 +5,6 @@
 #include <istream>
 #include <string>
 #include <cassert>
-#include <algorithm>
 #include <compare>
 
 #include "IteratorBase.h"

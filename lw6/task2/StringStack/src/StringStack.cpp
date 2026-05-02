@@ -12,6 +12,7 @@ CStringStack::CStringStack(const CStringStack& other)
 {
 	CopyFrom(other);
 }
+
 // std::exchange
 CStringStack::CStringStack(CStringStack&& other) noexcept
 	: m_top(other.m_top)
