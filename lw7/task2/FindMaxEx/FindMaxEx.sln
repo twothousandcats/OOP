@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindMaxEx", "FindMaxEx\FindMaxEx.csproj", "{84CA6A37-9660-4896-BCA6-2C524B2E9836}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindMaxEx.Tests", "FindMaxEx.Tests\FindMaxEx.Tests.csproj", "{5D0CB3A9-245E-49B9-8F17-A78178763FFE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{84CA6A37-9660-4896-BCA6-2C524B2E9836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84CA6A37-9660-4896-BCA6-2C524B2E9836}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84CA6A37-9660-4896-BCA6-2C524B2E9836}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84CA6A37-9660-4896-BCA6-2C524B2E9836}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D0CB3A9-245E-49B9-8F17-A78178763FFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D0CB3A9-245E-49B9-8F17-A78178763FFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D0CB3A9-245E-49B9-8F17-A78178763FFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D0CB3A9-245E-49B9-8F17-A78178763FFE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
