@@ -1,5 +1,5 @@
 #pragma once
-
+// todo: посмотреть концепты!
 #include "CMyArrayIterator.h"
 
 #include <algorithm>
@@ -44,6 +44,8 @@ public:
 		}
 	}
 
+	// todo: T - может не иметь move
+	// можно поправить концептами
 	CMyArray(CMyArray&& other) noexcept
 		: m_data(std::exchange(other.m_data, nullptr))
 		  , m_size(std::exchange(other.m_size, 0))
@@ -177,6 +179,7 @@ public:
 	const_reverse_iterator crend() const noexcept { return rend(); }
 
 private:
+	// todo: изучить концепты и применить
 	static T* AllocateRaw(const size_type count)
 	{
 		if (count == 0)
@@ -187,18 +190,22 @@ private:
 		return static_cast<T*>(::operator new(count * sizeof(T)));
 	}
 
+	// todo: точно ли стоит разделять?
+	// мб можно только delete
 	static void DeallocateRaw(T* ptr) noexcept
 	{
 		::operator delete(ptr);
 	}
 
-	template <typename... Args> static void ConstructAt(T* location, Args&&... args)
+	template <typename... Args>
+	static void ConstructAt(T* location, Args&&... args)
 	{
 		::new(static_cast<void*>(location)) T(std::forward<Args>(args)...);
 	}
 
 	void DestroyAndDeallocate() noexcept
 	{
+		// todo: ~ может бросать, надо обратботать
 		for (size_type i = 0; i < m_size; ++i)
 		{
 			m_data[i].~T();
@@ -252,7 +259,8 @@ private:
 		m_capacity = newCapacity;
 	}
 
-	template <typename U> void EmplaceBackImpl(U&& value)
+	template <typename U>
+	void EmplaceBackImpl(U&& value)
 	{
 		if (m_size == m_capacity)
 		{

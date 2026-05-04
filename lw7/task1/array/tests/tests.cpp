@@ -10,6 +10,9 @@
 #include <utility>
 #include <vector>
 
+// todo: написать тесты для своих классов
+// todo: класс должен кидать искючение в деструкторе
+
 // Construction
 
 TEST_CASE("default constructed array is empty")
@@ -108,6 +111,8 @@ TEST_CASE("operator[] throws std::out_of_range")
 
 TEST_CASE("Resize grows with default values and shrinks")
 {
+	// todo: добавить сложные классы
+	// надо чтобы бросал исключения
 	CMyArray<int> a;
 	a.Resize(3);
 	REQUIRE(a.GetSize() == 3);
