@@ -105,19 +105,10 @@ public:
 		return a.m_ptr == b.m_ptr;
 	}
 
-	friend bool operator!=(const CMyArrayIterator& a, const CMyArrayIterator& b) noexcept
+	friend std::strong_ordering operator<=>(const CMyArrayIterator& a, const CMyArrayIterator& b) noexcept
 	{
-		return !(a == b);
+		return IsReverse ? (b.m_ptr <=> a.m_ptr) : (a.m_ptr <=> b.m_ptr);
 	}
-
-	friend bool operator<(const CMyArrayIterator& a, const CMyArrayIterator& b) noexcept
-	{
-		return IsReverse ? (a.m_ptr > b.m_ptr) : (a.m_ptr < b.m_ptr);
-	}
-
-	friend bool operator>(const CMyArrayIterator& a, const CMyArrayIterator& b) noexcept { return b < a; }
-	friend bool operator<=(const CMyArrayIterator& a, const CMyArrayIterator& b) noexcept { return !(b < a); }
-	friend bool operator>=(const CMyArrayIterator& a, const CMyArrayIterator& b) noexcept { return !(a < b); }
 
 private:
 	pointer m_ptr = nullptr;
