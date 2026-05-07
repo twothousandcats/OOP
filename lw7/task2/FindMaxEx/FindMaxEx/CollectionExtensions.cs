@@ -13,7 +13,7 @@ public static class CollectionExtensions
 
         if ( source.Count == 0 )
         {
-            result = default;
+            result = default!;
             return false;
         }
 

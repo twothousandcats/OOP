@@ -2,22 +2,16 @@ namespace FindMaxEx.Domain;
 
 public class Athlete : IAthlete
 {
-    private readonly string _fullName;
-
-    private readonly int _height;
-
-    private readonly int _weight;
-
     public Athlete( string name, int height, int weight )
     {
-        _fullName = name;
-        _height = height;
-        _weight = weight;
+        FullName = name;
+        Height = height;
+        Weight = weight;
     }
 
-    public string FullName { get; } // fullName
+    public string FullName { get; } // _fullName
 
-    public int Height { get; } // centimeter
+    public int Height { get; } // _centimeter
 
-    public int Weight { get; } // kilograms
+    public int Weight { get; } // _kilograms
 }

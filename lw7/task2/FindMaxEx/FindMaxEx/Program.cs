@@ -20,7 +20,7 @@ public class Program
 
         if ( athletes.TryFindMax( ( a, b ) => a.Weight < b.Weight, out IAthlete heaviestAthlete ) )
         {
-            Console.WriteLine( $"Tallest athlete is {heaviestAthlete.FullName}." );
+            Console.WriteLine( $"Heaviest athlete is {heaviestAthlete.FullName}." );
         }
     }
 }

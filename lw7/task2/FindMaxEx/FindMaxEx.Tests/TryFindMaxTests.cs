@@ -11,7 +11,7 @@ public class TryFindMaxTests
     {
         IReadOnlyList<int> source = Array.Empty<int>();
 
-        bool found = source.TryFindMax( ( a, b ) => a < b, out int max );
+        bool found = source.TryFindMax( ( a, b ) => a < b, out _ );
 
         Assert.That( found, Is.False );
     }
@@ -51,7 +51,7 @@ public class TryFindMaxTests
 
     // nullPredicate -> throws
     [Test]
-    public void TryFindMax_EmptyPredicate_ThrowsArgumentException()
+    public void TryFindMax_NullPredicate_ThrowsArgumentNullException()
     {
         IReadOnlyList<int> source = new[] { 1, 2, 3 };
 
