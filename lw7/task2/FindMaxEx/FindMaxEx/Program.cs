@@ -11,7 +11,7 @@ public class Program
             new Athlete( "Ivanov I.I.", 180, 75 ),
             new Athlete( "Petrov E.E.", 200, 90 ),
             new Athlete( "Sidorov A.A.", 188, 102 ),
-        }.AsReadOnly();
+        };
 
         if ( athletes.TryFindMax( ( a, b ) => a.Height < b.Height, out IAthlete tallestAthlete ) )
         {
