@@ -132,4 +132,12 @@ public class TryFindMaxTests
         Assert.That( tallestAthlete, Is.Not.Null );
         Assert.That( tallestAthlete.FullName, Does.StartWith( "Petrov" ) );
     }
+
+    [Test]
+    public void TryFindMax_NullCollection_ThrowsArgumentNullException()
+    {
+        IReadOnlyList<int?> source = new int?[] { 1, null, 2, null, 3, null, null, 4, 5 };
+
+        Assert.Throws<NotSupportedException>( () => source.TryFindMax( ( a, b ) => a > b, out _ ) );
+    }
 }

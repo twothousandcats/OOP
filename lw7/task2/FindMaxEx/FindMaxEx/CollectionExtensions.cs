@@ -10,6 +10,10 @@ public static class CollectionExtensions
     {
         ArgumentNullException.ThrowIfNull( source );
         ArgumentNullException.ThrowIfNull( less );
+        if ( default( T ) is null && Nullable.GetUnderlyingType( typeof( T ) ) != null )
+        {
+            throw new NotSupportedException( "Nullable not supported" );
+        }
 
         if ( source.Count == 0 )
         {
