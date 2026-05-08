@@ -1,3 +1,4 @@
+using FindMaxEx.Domain;
 using NUnit.Framework;
 
 namespace FindMaxEx.Tests;
@@ -78,5 +79,58 @@ public class TryFindMaxTests
         );
 
         Assert.That( source, Is.EqualTo( snapshot ) );
+    }
+
+    [Test]
+    public void TryFindMax_EmptyCollection_OutIsDefault()
+    {
+        IReadOnlyList<int> src = Array.Empty<int>();
+
+        src.TryFindMax( ( a, b ) => a < b, out int result );
+
+        Assert.That( result, Is.EqualTo( default( int ) ) ); // 0
+    }
+
+    [Test]
+    public void TryFindMax_AlwaysTruePredicate_ReturnsLastElement()
+    {
+        IReadOnlyList<int> src = new[] { 1, 2, 3 };
+
+        src.TryFindMax( ( a, b ) => true, out int m );
+
+        Assert.That( m, Is.EqualTo( 3 ) );
+    }
+
+    [Test]
+    public void TryFindMax_AlwaysFalsePredicate_ReturnsFirstElement()
+    {
+        IReadOnlyList<int> src = new List<int>
+        {
+            1,
+            2,
+            3
+        };
+
+        src.TryFindMax( ( a, b ) => false, out int m );
+
+        Assert.That( m, Is.EqualTo( 1 ) );
+    }
+
+    // Custom
+    [Test]
+    public void TryFindMax_WorksWithCustomClass_ReturnsCorrectResult()
+    {
+        IReadOnlyList<IAthlete> athletes = new List<IAthlete>
+        {
+            new Athlete( "Ivanov I.I.", 180, 75 ),
+            new Athlete( "Petrov E.E.", 200, 90 ),
+            new Athlete( "Sidorov A.A.", 188, 102 ),
+        }.AsReadOnly();
+
+        bool found = athletes.TryFindMax( ( a, b ) => a.Height < b.Height, out IAthlete tallestAthlete );
+
+        Assert.That( found, Is.True );
+        Assert.That( tallestAthlete, Is.Not.Null );
+        Assert.That( tallestAthlete.FullName, Does.StartWith( "Petrov" ) );
     }
 }
