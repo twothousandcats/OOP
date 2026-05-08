@@ -2,11 +2,11 @@ namespace FindMaxEx;
 
 public static class CollectionExtensions
 {
-    public static bool TryFindMax<TElement>(
-        this IReadOnlyList<TElement> source,
-        Func<TElement, TElement, bool> less,
-        out TElement result
-    ) where TElement : notnull
+    public static bool TryFindMax<T>(
+        this IReadOnlyList<T> source,
+        Func<T, T, bool> less,
+        out T result
+    ) where T : notnull
     {
         ArgumentNullException.ThrowIfNull( source );
         ArgumentNullException.ThrowIfNull( less );
@@ -17,7 +17,7 @@ public static class CollectionExtensions
             return false;
         }
 
-        TElement element = source[ 0 ];
+        T element = source[ 0 ];
         for ( int i = 1; i < source.Count; i++ )
         {
             if ( less( element, source[ i ] ) )

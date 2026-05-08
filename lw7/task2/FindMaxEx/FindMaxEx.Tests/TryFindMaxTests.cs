@@ -67,10 +67,9 @@ public class TryFindMaxTests
             1,
             2,
             3,
-        }.AsReadOnly();
+        };
 
         IReadOnlyList<int> snapshot = source.ToArray();
-
         Assert.Throws<InvalidOperationException>( () =>
             source.TryFindMax(
                 ( a, b ) => throw new InvalidOperationException(),
